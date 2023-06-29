@@ -1,6 +1,15 @@
+// EEPROM circular buffer configuration
+#define BUFFER_START 0x10 // buffer start address
+#define BUFFER_LEN 10     // number of data blocks
+
 #include "Arduino.h"
 #include "LedManager.h"
 #include "EEPROM.h"
+#include "eewl.h"
+
+byte ledLevelIndex;
+
+EEWL storedState(ledLevelIndex, BUFFER_LEN, BUFFER_START);
 
 LedManager::LedManager(byte pin1, byte pin2, byte pin3)
 {
@@ -12,12 +21,13 @@ LedManager::LedManager(byte pin1, byte pin2, byte pin3)
 
 void LedManager::begin()
 {
-    this->ledLevelIndex = EEPROM.read(EEPROM_ADDRESS);
-    if (this->ledLevelIndex >= LED_LEVELS_COUNT) {
-        this->ledLevelIndex = 0;
+    storedState.begin();
+    if (storedState.get(ledLevelIndex))
+    {
+        Serial.print(F("Loaded Led level "));
+        Serial.println(LED_LEVELS[ledLevelIndex]);
     }
-    Serial.print(F("Loaded Led level "));
-    Serial.println(LED_LEVELS[ledLevelIndex]);
+
     writeLedOutput();
 }
 
@@ -45,7 +55,7 @@ void LedManager::writeLedOutput()
 void LedManager::changeLedLevel()
 {
     ledLevelIndex = (ledLevelIndex + 1) % LED_LEVELS_COUNT;
-    // EEPROM.write(EEPROM_ADDRESS, ledLevelIndex);
+    storedState.put(ledLevelIndex);
     writeLedOutput();
     Serial.print(F("Increase Led to "));
     Serial.println(LED_LEVELS[ledLevelIndex]);

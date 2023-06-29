@@ -16,7 +16,6 @@ class LedManager {
     private:
     byte ledPins[3];
     int ledCount;
-    byte ledLevelIndex;
     bool enabled;
 
     const byte LED_LEVELS_COUNT = 5;
