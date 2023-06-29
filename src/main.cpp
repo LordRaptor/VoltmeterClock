@@ -180,6 +180,7 @@ void enterSettings()
   settingsData.hours = dt.hour();
   settingsData.minutes = dt.minute();
   settingsData.seconds = 0;
+  writeTimetoSerial(settingsData.hours, settingsData.minutes, settingsData.seconds);
 
   ledManager.disable();
   analogWrite(HOURS_LED_PIN, 0);
