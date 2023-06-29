@@ -9,11 +9,16 @@ void startupRoutine();
 void normalStateLoop();
 void settingStateLoop();
 void calibrationStateLoop();
+void writeTimetoSerial(uint8_t hours, uint8_t minutes, uint8_t seconds);
+void enterSettings();
+void exitSettings();
+void buttonPushedCallbackFunction(void *ref);
+void buttonLongPressedCallbackFunction(void *ref);
 
-const float maxHours = 23;
-const float maxMinutes = 59;
-const float maxSeconds = 59;
-const int stepsPerSecond = 10;
+const float MAX_HOURS = 24;
+const float MAX_MINUTES = 60;
+const float MAX_SECONDS = 59;
+const int VOLTMETER_STEPS_PER_SECOND = 10;
 const unsigned long NORMAL_STATE_DELAY = 5000;
 const unsigned long SETTINGS_BLINK_DELAY = 750;
 
@@ -45,9 +50,9 @@ struct SettingsData
 };
 SettingsData settingsData = {};
 
-Voltmeter hoursVoltmeter(11, stepsPerSecond);
-Voltmeter minutesVoltmeter(10, stepsPerSecond);
-Voltmeter secondsVoltmeter(9, stepsPerSecond);
+Voltmeter hoursVoltmeter(11, VOLTMETER_STEPS_PER_SECOND);
+Voltmeter minutesVoltmeter(10, VOLTMETER_STEPS_PER_SECOND);
+Voltmeter secondsVoltmeter(9, VOLTMETER_STEPS_PER_SECOND);
 
 LedManager ledManager(HOURS_LED_PIN, MINUTES_LED_PIN, SECONDS_LED_PIN);
 
@@ -58,83 +63,6 @@ Switch button3 = Switch(4);
 RTC_DS3231 rtc;
 
 unsigned long lastDisplayUpdate = 0;
-
-void writeTimetoSerial(uint8_t hours, uint8_t minutes, uint8_t seconds)
-{
-  if (hours < 10)
-  {
-    Serial.print("0");
-  }
-  Serial.print(hours);
-  Serial.print(":");
-  if (minutes < 10)
-  {
-    Serial.print("0");
-  }
-  Serial.print(minutes);
-  Serial.print(":");
-  if (seconds < 10)
-  {
-    Serial.print("0");
-  }
-  Serial.println(seconds);
-}
-
-void enterSettings()
-{
-  Serial.println(F("Entering settings state"));
-  state = setting;
-  DateTime dt = rtc.now();
-  settingsData.hours = dt.hour();
-  settingsData.minutes = dt.minute();
-  settingsData.seconds = 0;
-
-  ledManager.disable();
-  analogWrite(HOURS_LED_PIN, 0);
-  analogWrite(MINUTES_LED_PIN, 0);
-  analogWrite(SECONDS_LED_PIN, 0);
-}
-
-void exitSettings()
-{
-
-  state = normal;
-  rtc.adjust(DateTime(2023, 1, 1, settingsData.hours, settingsData.minutes, settingsData.seconds));
-  lastDisplayUpdate = 0; // Force an update
-  ledManager.enable();
-  ledManager.writeLedOutput();
-  Serial.println(F("Exiting settings state"));
-}
-
-void buttonPushedCallbackFunction(void *ref)
-{
-  byte b = *((byte *)ref);
-
-  Serial.print("Button pushed: ");
-  Serial.println(b);
-
-  if (b == BUTTON_2_ID && state == normal)
-  {
-    // Change LED state
-    ledManager.changeLedLevel();
-  } else if (b == BUTTON_3_ID && state == normal) {
-    
-  }
-}
-
-void buttonLongPressedCallbackFunction(void *ref)
-{
-  byte b = *((byte *)ref);
-
-  Serial.print("Button long pressed: ");
-  Serial.println(b);
-
-  if (b == BUTTON_1_ID && state == normal)
-  {
-    // Enter settings
-    enterSettings();
-  }
-}
 
 void setup()
 {
@@ -235,13 +163,28 @@ void normalStateLoop()
   // float floatHours = hours + (minutes / 60);
   // float floatMinutes = minutes + (seconds / 60);
 
-  // hoursVoltmeter.setTarget(floatHours * (255 / maxHours));
-  // minutesVoltmeter.setTarget(floatMinutes * (255 / maxMinutes));
-  // secondsVoltmeter.setTarget(seconds * (255 / maxSeconds));
+  // hoursVoltmeter.setTarget(floatHours * (255 / MAX_HOURS));
+  // minutesVoltmeter.setTarget(floatMinutes * (255 / MAX_MINUTES));
+  // secondsVoltmeter.setTarget(seconds * (255 / MAX_SECONDS));
 
   // hoursVoltmeter.update();
   // minutesVoltmeter.update();
   // secondsVoltmeter.update();
+}
+
+void enterSettings()
+{
+  Serial.println(F("Entering settings state"));
+  state = setting;
+  DateTime dt = rtc.now();
+  settingsData.hours = dt.hour();
+  settingsData.minutes = dt.minute();
+  settingsData.seconds = 0;
+
+  ledManager.disable();
+  analogWrite(HOURS_LED_PIN, 0);
+  analogWrite(MINUTES_LED_PIN, 0);
+  analogWrite(SECONDS_LED_PIN, 0);
 }
 
 void settingStateLoop()
@@ -272,7 +215,69 @@ void settingStateLoop()
   }
 }
 
+void exitSettings()
+{
+
+  state = normal;
+  rtc.adjust(DateTime(2023, 1, 1, settingsData.hours, settingsData.minutes, settingsData.seconds));
+  lastDisplayUpdate = 0; // Force an update
+  ledManager.enable();
+  ledManager.writeLedOutput();
+  Serial.println(F("Exiting settings state"));
+}
+
 void calibrationStateLoop()
 {
   // Used to calibrate the voltmeters
+}
+
+void writeTimetoSerial(uint8_t hours, uint8_t minutes, uint8_t seconds)
+{
+  if (hours < 10)
+  {
+    Serial.print("0");
+  }
+  Serial.print(hours);
+  Serial.print(":");
+  if (minutes < 10)
+  {
+    Serial.print("0");
+  }
+  Serial.print(minutes);
+  Serial.print(":");
+  if (seconds < 10)
+  {
+    Serial.print("0");
+  }
+  Serial.println(seconds);
+}
+
+void buttonPushedCallbackFunction(void *ref)
+{
+  byte b = *((byte *)ref);
+
+  Serial.print("Button pushed: ");
+  Serial.println(b);
+
+  if (b == BUTTON_2_ID && state == normal)
+  {
+    // Change LED state
+    ledManager.changeLedLevel();
+  } else if (b == BUTTON_3_ID && state == normal) {
+    
+  }
+}
+
+void buttonLongPressedCallbackFunction(void *ref)
+{
+  byte b = *((byte *)ref);
+
+  Serial.print("Button long pressed: ");
+  Serial.println(b);
+
+  if (b == BUTTON_1_ID && state == normal)
+  {
+    // Enter settings
+    enterSettings();
+  }
 }
