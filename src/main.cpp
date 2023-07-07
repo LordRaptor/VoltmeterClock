@@ -31,9 +31,6 @@ void exitSettings();
 void buttonPushedCallbackFunction(void *ref);
 void buttonLongPressedCallbackFunction(void *ref);
 
-const float MAX_HOURS = 24;
-const float MAX_MINUTES = 60;
-const float MAX_SECONDS = 59;
 const unsigned long NORMAL_STATE_DELAY = 5000;
 const unsigned long SETTINGS_BLINK_DELAY = 750;
 
