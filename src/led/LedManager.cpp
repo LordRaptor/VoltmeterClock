@@ -23,29 +23,33 @@ void LedManager::begin()
 {
     storedState.begin();
     restoreLedLevel();
+    setMode(constant);
 
     writeLedOutput();
 }
 
-void LedManager::enable()
+void LedManager::update()
 {
-    this->enabled = true;
-}
-
-void LedManager::disable()
-{
-    this->enabled = false;
-}
-
-void LedManager::writeLedOutput()
-{
-    if (enabled)
+    switch (mode)
     {
-        for (byte i = 0; i < ledCount; i++)
+    case blinking:
+    {
+        unsigned now = millis();
+        if ((now - lastBlink) > blinkSpeed)
         {
-            analogWrite(ledPins[i], LED_LEVELS[ledLevelIndex]);
+            lastBlink = now;
+            blinkState = ~blinkState;
+
+            for (byte i = 0; i < ledCount; i++)
+            {
+                targetLetBrightness[i] = blinkState;
+            }
         }
     }
+    default:
+        break;
+    }
+    writeLedOutput();
 }
 
 void LedManager::changeLedLevel()
@@ -56,16 +60,75 @@ void LedManager::changeLedLevel()
     Serial.println(LED_LEVELS[ledLevelIndex]);
 }
 
-void LedManager::saveLedLevel() {
+void LedManager::saveLedLevel()
+{
     storedState.put(ledLevelIndex);
-        Serial.print(F("Saved Led level "));
-        Serial.println(LED_LEVELS[ledLevelIndex]);
+    Serial.print(F("Saved Led level "));
+    Serial.println(LED_LEVELS[ledLevelIndex]);
 }
 
-void LedManager::restoreLedLevel() {
+void LedManager::restoreLedLevel()
+{
     if (storedState.get(ledLevelIndex))
     {
         Serial.print(F("Loaded Led level "));
         Serial.println(LED_LEVELS[ledLevelIndex]);
+    }
+}
+
+void LedManager::setMode(LedMode mode)
+{
+    if (this->mode != mode)
+    {
+        // Mode switch
+        this->mode = mode;
+        switch (this->mode)
+        {
+        case constant:
+            for (byte i = 0; i < ledCount; i++)
+            {
+                targetLetBrightness[i] = LED_LEVELS[ledLevelIndex];
+            }
+            break;
+        case custom:
+            for (byte i = 0; i < ledCount; i++)
+            {
+                targetLetBrightness[i] = 0;
+            }
+            break;
+        case blinking:
+            for (byte i = 0; i < ledCount; i++)
+            {
+                targetLetBrightness[i] = 0;
+            }
+            blinkState = 0;
+            lastBlink = millis();
+        default:
+            break;
+        }
+    }
+}
+
+void LedManager::setBlinkSpeed(unsigned long blinkSpeed) {
+    this->blinkSpeed = blinkSpeed;
+}
+
+void LedManager::setLedBrightness(byte led, byte level)
+{
+    if (mode == custom && led < ledCount)
+    {
+        targetLetBrightness[led] = level;
+    }
+}
+
+void LedManager::writeLedOutput()
+{
+    for (byte i = 0; i < ledCount; i++)
+    {
+        if (currentLedBrightness[i] != targetLetBrightness[i])
+        {
+            analogWrite(ledPins[i], targetLetBrightness[i]);
+            currentLedBrightness[i] = targetLetBrightness[i];
+        }
     }
 }

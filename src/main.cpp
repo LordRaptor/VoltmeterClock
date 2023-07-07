@@ -22,7 +22,7 @@
 
 // put function declarations here:
 void startupRoutine();
-void normalStateLoop();
+void displayTimeLoop();
 void settingStateLoop();
 void calibrationStateLoop();
 void writeTimetoSerial(uint8_t hours, uint8_t minutes, uint8_t seconds);
@@ -32,7 +32,6 @@ void buttonPushedCallbackFunction(void *ref);
 void buttonLongPressedCallbackFunction(void *ref);
 
 const unsigned long NORMAL_STATE_DELAY = 5000;
-const unsigned long SETTINGS_BLINK_DELAY = 750;
 
 const byte BUTTON_1_ID = 1;
 const byte BUTTON_2_ID = 2;
@@ -43,7 +42,7 @@ const byte BUTTON_3_ID = 3;
 enum ClockState
 {
   startup,
-  normal,
+  displayTime,
   setting,
   calibration
 };
@@ -101,8 +100,8 @@ void setup()
   button2.setLongPressCallback(&buttonLongPressedCallbackFunction, (void *)&BUTTON_2_ID);
   button3.setLongPressCallback(&buttonLongPressedCallbackFunction, (void *)&BUTTON_3_ID);
 
-  ledManager.enable();
   ledManager.begin();
+  ledManager.update();
 
   voltmeterManager.begin();
 
@@ -125,8 +124,8 @@ void loop()
   case startup:
     startupRoutine();
     break;
-  case normal:
-    normalStateLoop();
+  case displayTime:
+    displayTimeLoop();
     voltmeterManager.updateVoltmeters();
     break;
   case setting:
@@ -139,6 +138,8 @@ void loop()
   default:
     break;
   }
+
+  ledManager.update();
 }
 
 // put function definitions here:
@@ -155,10 +156,10 @@ void startupRoutine()
     ;
 
   voltmeterManager.resetDisplayMode();
-  state = normal;
+  state = displayTime;
 }
 
-void normalStateLoop()
+void displayTimeLoop()
 {
 
   //TODO: Remove/refactor delay
@@ -181,18 +182,19 @@ void enterSettings()
 {
   Serial.println(F("Entering settings state"));
   state = setting;
+
   DateTime dt = rtc.now();
   settingsData.hours = dt.hour();
   settingsData.minutes = dt.minute();
   settingsData.seconds = 0;
+
   writeTimetoSerial(settingsData.hours, settingsData.minutes, settingsData.seconds);
+
   voltmeterManager.setDisplayMode(digital);
   voltmeterManager.updateTime(settingsData.hours, settingsData.minutes, settingsData.seconds);
 
-  ledManager.disable();
-  analogWrite(HOURS_LED_PIN, 0);
-  analogWrite(MINUTES_LED_PIN, 0);
-  analogWrite(SECONDS_LED_PIN, 0);
+  ledManager.setMode(blinking);
+
 }
 
 void settingStateLoop()
@@ -214,26 +216,20 @@ void settingStateLoop()
     voltmeterManager.updateTime(settingsData.hours, settingsData.minutes, settingsData.seconds);
   }
 
-  unsigned long now = millis();
-  if (SETTINGS_BLINK_DELAY < (now - settingsData.lastBlink))
-  {
-    settingsData.lastBlink = now;
-    settingsData.blinkState = ~settingsData.blinkState;
-    analogWrite(HOURS_LED_PIN, settingsData.blinkState);
-    analogWrite(MINUTES_LED_PIN, settingsData.blinkState);
-    analogWrite(SECONDS_LED_PIN, settingsData.blinkState);
-  }
+
 }
 
 void exitSettings()
 {
 
-  state = normal;
+  state = displayTime;
   rtc.adjust(DateTime(2023, 1, 1, settingsData.hours, settingsData.minutes, settingsData.seconds));
   lastDisplayUpdate = 0; // Force an update
-  ledManager.enable();
-  ledManager.writeLedOutput();
+
   voltmeterManager.resetDisplayMode();
+
+  ledManager.setMode(constant);
+
   Serial.println(F("Exiting settings state"));
 }
 
@@ -270,13 +266,13 @@ void buttonPushedCallbackFunction(void *ref)
   Serial.print("Button pushed: ");
   Serial.println(b);
 
-  if (b == BUTTON_2_ID && state == normal)
+  if (b == BUTTON_2_ID && state == displayTime)
   {
     // Change LED state
     ledManager.changeLedLevel();
     ledManager.saveLedLevel();
   }
-  else if (b == BUTTON_3_ID && state == normal)
+  else if (b == BUTTON_3_ID && state == displayTime)
   {
     voltmeterManager.changeDisplayMode();
     voltmeterManager.saveCurrentDisplayMode();
@@ -290,7 +286,7 @@ void buttonLongPressedCallbackFunction(void *ref)
   Serial.print("Button long pressed: ");
   Serial.println(b);
 
-  if (b == BUTTON_1_ID && state == normal)
+  if (b == BUTTON_1_ID && state == displayTime)
   {
     // Enter settings
     enterSettings();
