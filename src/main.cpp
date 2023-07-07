@@ -1,8 +1,24 @@
 #include <Arduino.h>
-#include <voltmeter/Voltmeter.h>
+#include <voltmeter/VoltmeterManager.h>
 #include <led/LedManager.h>
 #include <RTClib.h>
 #include <avdweb_Switch.h>
+
+// Voltmeters
+#define HOURS_VOLTMETER_PIN 11
+#define MINUTES_VOLTMETER_PIN 10
+#define SECONDS_VOLTMETER_PIN 9
+#define VOLTMETER_STEPS_PER_SECOND 10
+
+//LEDs
+#define HOURS_LED_PIN 6
+#define MINUTES_LED_PIN 5
+#define SECONDS_LED_PIN 3
+
+//Buttons
+#define BUTTON_1_PIN 2
+#define BUTTON_2_PIN 7
+#define BUTTON_3_PIN 4
 
 // put function declarations here:
 void startupRoutine();
@@ -18,7 +34,6 @@ void buttonLongPressedCallbackFunction(void *ref);
 const float MAX_HOURS = 24;
 const float MAX_MINUTES = 60;
 const float MAX_SECONDS = 59;
-const int VOLTMETER_STEPS_PER_SECOND = 10;
 const unsigned long NORMAL_STATE_DELAY = 5000;
 const unsigned long SETTINGS_BLINK_DELAY = 750;
 
@@ -26,9 +41,6 @@ const byte BUTTON_1_ID = 1;
 const byte BUTTON_2_ID = 2;
 const byte BUTTON_3_ID = 3;
 
-const byte HOURS_LED_PIN = 6;
-const byte MINUTES_LED_PIN = 5;
-const byte SECONDS_LED_PIN = 3;
 
 // Do not use Pins 5 and 6 for Voltmeters
 enum ClockState
@@ -38,7 +50,7 @@ enum ClockState
   setting,
   calibration
 };
-ClockState state = normal;
+ClockState state = startup;
 
 struct SettingsData
 {
@@ -50,15 +62,16 @@ struct SettingsData
 };
 SettingsData settingsData = {};
 
-Voltmeter hoursVoltmeter(11, VOLTMETER_STEPS_PER_SECOND);
-Voltmeter minutesVoltmeter(10, VOLTMETER_STEPS_PER_SECOND);
-Voltmeter secondsVoltmeter(9, VOLTMETER_STEPS_PER_SECOND);
-
 LedManager ledManager(HOURS_LED_PIN, MINUTES_LED_PIN, SECONDS_LED_PIN);
 
-Switch button1 = Switch(2, INPUT_PULLUP, LOW, 50, 1000, 250, 10);
-Switch button2 = Switch(7);
-Switch button3 = Switch(4);
+VoltmeterManager voltmeterManager(
+    new Voltmeter(HOURS_VOLTMETER_PIN, VOLTMETER_STEPS_PER_SECOND),
+    new Voltmeter(MINUTES_VOLTMETER_PIN, VOLTMETER_STEPS_PER_SECOND),
+    new Voltmeter(SECONDS_VOLTMETER_PIN, VOLTMETER_STEPS_PER_SECOND));
+
+Switch button1 = Switch(BUTTON_1_PIN, INPUT_PULLUP, LOW, 50, 1000, 250, 10);
+Switch button2 = Switch(BUTTON_2_PIN);
+Switch button3 = Switch(BUTTON_3_PIN);
 
 RTC_DS3231 rtc;
 
@@ -66,7 +79,7 @@ unsigned long lastDisplayUpdate = 0;
 
 void setup()
 {
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   if (!rtc.begin())
   {
@@ -94,7 +107,9 @@ void setup()
   ledManager.enable();
   ledManager.begin();
 
-    if (rtc.lostPower())
+  voltmeterManager.begin();
+
+  if (rtc.lostPower())
   {
     Serial.println(F("RTC lost power, set the time!"));
     enterSettings();
@@ -115,9 +130,11 @@ void loop()
     break;
   case normal:
     normalStateLoop();
+    voltmeterManager.updateVoltmeters();
     break;
   case setting:
     settingStateLoop();
+    voltmeterManager.updateVoltmeters();
     break;
   case calibration:
     calibrationStateLoop();
@@ -130,23 +147,23 @@ void loop()
 // put function definitions here:
 void startupRoutine()
 {
-  hoursVoltmeter.setTarget(255);
-  minutesVoltmeter.setTarget(255);
-  secondsVoltmeter.setTarget(255);
-  while (!(hoursVoltmeter.update() && minutesVoltmeter.update() && secondsVoltmeter.update()))
+  voltmeterManager.setDisplayMode(analog);
+  voltmeterManager.updateTime(24, 60, 60);
+
+  while (!voltmeterManager.updateVoltmeters())
     ;
 
-  hoursVoltmeter.setTarget(0);
-  minutesVoltmeter.setTarget(0);
-  secondsVoltmeter.setTarget(0);
-  while (!(hoursVoltmeter.update() && minutesVoltmeter.update() && secondsVoltmeter.update()))
+  voltmeterManager.updateTime(0, 0, 0);
+  while (!voltmeterManager.updateVoltmeters())
     ;
 
+  voltmeterManager.resetDisplayMode();
   state = normal;
 }
 
 void normalStateLoop()
 {
+
   if ((millis() - lastDisplayUpdate) < NORMAL_STATE_DELAY)
   {
     return;
@@ -159,17 +176,7 @@ void normalStateLoop()
   uint8_t seconds = now.second();
 
   writeTimetoSerial(hours, minutes, seconds);
-
-  // float floatHours = hours + (minutes / 60);
-  // float floatMinutes = minutes + (seconds / 60);
-
-  // hoursVoltmeter.setTarget(floatHours * (255 / MAX_HOURS));
-  // minutesVoltmeter.setTarget(floatMinutes * (255 / MAX_MINUTES));
-  // secondsVoltmeter.setTarget(seconds * (255 / MAX_SECONDS));
-
-  // hoursVoltmeter.update();
-  // minutesVoltmeter.update();
-  // secondsVoltmeter.update();
+  voltmeterManager.updateTime(hours, minutes, seconds);
 }
 
 void enterSettings()
@@ -181,6 +188,8 @@ void enterSettings()
   settingsData.minutes = dt.minute();
   settingsData.seconds = 0;
   writeTimetoSerial(settingsData.hours, settingsData.minutes, settingsData.seconds);
+  voltmeterManager.setDisplayMode(digital);
+  voltmeterManager.updateTime(settingsData.hours, settingsData.minutes, settingsData.seconds);
 
   ledManager.disable();
   analogWrite(HOURS_LED_PIN, 0);
@@ -198,11 +207,13 @@ void settingStateLoop()
   {
     settingsData.hours = (settingsData.hours + 1) % 24;
     writeTimetoSerial(settingsData.hours, settingsData.minutes, settingsData.seconds);
+    voltmeterManager.updateTime(settingsData.hours, settingsData.minutes, settingsData.seconds);
   }
   else if (button3.pushed())
   {
     settingsData.minutes = (settingsData.minutes + 1) % 60;
     writeTimetoSerial(settingsData.hours, settingsData.minutes, settingsData.seconds);
+    voltmeterManager.updateTime(settingsData.hours, settingsData.minutes, settingsData.seconds);
   }
 
   unsigned long now = millis();
@@ -224,6 +235,7 @@ void exitSettings()
   lastDisplayUpdate = 0; // Force an update
   ledManager.enable();
   ledManager.writeLedOutput();
+  voltmeterManager.resetDisplayMode();
   Serial.println(F("Exiting settings state"));
 }
 
@@ -264,8 +276,11 @@ void buttonPushedCallbackFunction(void *ref)
   {
     // Change LED state
     ledManager.changeLedLevel();
-  } else if (b == BUTTON_3_ID && state == normal) {
-    
+  }
+  else if (b == BUTTON_3_ID && state == normal)
+  {
+    voltmeterManager.changeDisplayMode();
+    voltmeterManager.saveCurrentDisplayMode();
   }
 }
 

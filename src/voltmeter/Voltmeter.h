@@ -1,8 +1,6 @@
 #ifndef Voltmeter_h
 #define Voltmeter_h
 
-#include "Arduino.h"
-
 class Voltmeter
 {
   public:
@@ -12,6 +10,8 @@ class Voltmeter
     void setSpeed(int speed); //Speed in steps/s
 
     bool update();
+
+    int getCurrentValue();
 
   private:
     int pin;

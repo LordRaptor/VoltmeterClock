@@ -51,3 +51,7 @@ void Voltmeter::updateDelayBetweenUpdates()
 {
     this->delayBetweenUpdates = 1000 / speed;
 }
+
+int Voltmeter::getCurrentValue() {
+    return currentValue;
+}

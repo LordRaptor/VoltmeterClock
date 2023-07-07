@@ -19,7 +19,6 @@ class LedManager {
     bool enabled;
 
     const byte LED_LEVELS_COUNT = 5;
-    const byte EEPROM_ADDRESS = 0;
     const byte LED_LEVELS[5] = {0, 64, 128, 192, 255};
 };
 
