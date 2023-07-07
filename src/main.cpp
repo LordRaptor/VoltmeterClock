@@ -161,6 +161,7 @@ void startupRoutine()
 void normalStateLoop()
 {
 
+  //TODO: Remove/refactor delay
   if ((millis() - lastDisplayUpdate) < NORMAL_STATE_DELAY)
   {
     return;
@@ -273,6 +274,7 @@ void buttonPushedCallbackFunction(void *ref)
   {
     // Change LED state
     ledManager.changeLedLevel();
+    ledManager.saveLedLevel();
   }
   else if (b == BUTTON_3_ID && state == normal)
   {

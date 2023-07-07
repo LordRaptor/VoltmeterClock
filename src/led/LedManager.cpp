@@ -22,11 +22,7 @@ LedManager::LedManager(byte pin1, byte pin2, byte pin3)
 void LedManager::begin()
 {
     storedState.begin();
-    if (storedState.get(ledLevelIndex))
-    {
-        Serial.print(F("Loaded Led level "));
-        Serial.println(LED_LEVELS[ledLevelIndex]);
-    }
+    restoreLedLevel();
 
     writeLedOutput();
 }
@@ -55,8 +51,21 @@ void LedManager::writeLedOutput()
 void LedManager::changeLedLevel()
 {
     ledLevelIndex = (ledLevelIndex + 1) % LED_LEVELS_COUNT;
-    storedState.put(ledLevelIndex);
     writeLedOutput();
     Serial.print(F("Increase Led to "));
     Serial.println(LED_LEVELS[ledLevelIndex]);
+}
+
+void LedManager::saveLedLevel() {
+    storedState.put(ledLevelIndex);
+        Serial.print(F("Saved Led level "));
+        Serial.println(LED_LEVELS[ledLevelIndex]);
+}
+
+void LedManager::restoreLedLevel() {
+    if (storedState.get(ledLevelIndex))
+    {
+        Serial.print(F("Loaded Led level "));
+        Serial.println(LED_LEVELS[ledLevelIndex]);
+    }
 }

@@ -3,6 +3,12 @@
 
 #include "Arduino.h"
 
+enum LedMode {
+    constant,
+    blinking,
+    pulsing
+};
+
 class LedManager {
     public:
     LedManager(byte pin1, byte pin2, byte pin3);
@@ -12,6 +18,8 @@ class LedManager {
     void disable();
     void writeLedOutput();
     void changeLedLevel();
+    void saveLedLevel();
+    void restoreLedLevel();
 
     private:
     byte ledPins[3];
