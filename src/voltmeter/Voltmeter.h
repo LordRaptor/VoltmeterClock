@@ -19,9 +19,7 @@ class Voltmeter
     int currentValue;
     int targetValue;
 
-    unsigned long delayBetweenUpdates;
     unsigned long lastUpdate;
 
-    void updateDelayBetweenUpdates();
 };
 #endif

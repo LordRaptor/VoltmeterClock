@@ -2,12 +2,13 @@
 #define LedManager_h
 
 #include "Arduino.h"
+#include "controller/SpeedLimitedController.h"
 
 enum LedMode {
-    constant,
+    saved_level,
     blinking,
     pulsing,
-    custom
+    off
 };
 
 class LedManager {
@@ -20,16 +21,16 @@ class LedManager {
 
     void setMode(LedMode mode);
 
-    void setBlinkSpeed(unsigned long speed);
+    void setBlinkInterval(unsigned long speed);
 
     void changeLedLevel();
     void saveLedLevel();
     void restoreLedLevel();
 
-    void setLedBrightness(byte led, byte level); //Only in custom mode
 
     private:
-    void writeLedOutput();
+    static void writeLedOuptut(void* instance, int value);
+
 
     byte ledPins[3];
     int ledCount;
@@ -37,13 +38,12 @@ class LedManager {
     const byte LED_LEVELS_COUNT = 5;
     const byte LED_LEVELS[5] = {0, 64, 128, 192, 255};
 
-    LedMode mode = constant;
-    int currentLedBrightness[3] = {0,0,0};
-    int targetLetBrightness[3] = {0,0,0};
+    LedMode mode = off;
 
-    unsigned long blinkSpeed = 750;
+    unsigned long blinkInterval = 750;
     unsigned long lastBlink = 0;
-    byte blinkState = 0;
+
+    SpeedLimitedController* controller;
 };
 
 #endif

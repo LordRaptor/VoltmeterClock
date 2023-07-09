@@ -1,5 +1,6 @@
 #include "Arduino.h"
 #include "Voltmeter.h"
+#include "helper/Lerp.h"
 
 Voltmeter::Voltmeter(int pin, int speed)
 {
@@ -8,8 +9,6 @@ Voltmeter::Voltmeter(int pin, int speed)
     this->currentValue = 0;
     this->targetValue = 0;
     this->lastUpdate = 0;
-
-    this->updateDelayBetweenUpdates();
 };
 
 void Voltmeter::setTarget(int target)
@@ -20,38 +19,22 @@ void Voltmeter::setTarget(int target)
 void Voltmeter::setSpeed(int speed)
 {
     this->speed = speed;
-    this->updateDelayBetweenUpdates();
 };
 
 bool Voltmeter::update()
 {
+    unsigned long now = millis();
     if (currentValue != targetValue)
     {
-        if ((millis() - lastUpdate) > delayBetweenUpdates)
-        {
-            // Update
-            lastUpdate = millis();
-
-            if (currentValue < targetValue)
-            {
-                currentValue++;
-            }
-            else if (currentValue > targetValue)
-            {
-                currentValue--;
-            }
-        }
+        currentValue = lerp(currentValue, targetValue, speed, now - lastUpdate);
     }
+    lastUpdate = now; //Keep updating this so there is no sudden jumps
 
     analogWrite(pin, currentValue);
     return currentValue == targetValue;
 }
 
-void Voltmeter::updateDelayBetweenUpdates()
+int Voltmeter::getCurrentValue()
 {
-    this->delayBetweenUpdates = 1000 / speed;
-}
-
-int Voltmeter::getCurrentValue() {
     return currentValue;
 }

@@ -6,6 +6,7 @@
 #include "LedManager.h"
 #include "EEPROM.h"
 #include "eewl.h"
+#include "helper/Lerp.h"
 
 byte ledLevelIndex;
 
@@ -17,45 +18,56 @@ LedManager::LedManager(byte pin1, byte pin2, byte pin3)
     this->ledPins[0] = pin1;
     this->ledPins[1] = pin2;
     this->ledPins[2] = pin3;
+    this->controller = new SpeedLimitedController(&writeLedOuptut, this, 255);
 }
 
 void LedManager::begin()
 {
     storedState.begin();
     restoreLedLevel();
-    setMode(constant);
-
-    writeLedOutput();
+    controller->begin();
+    setMode(saved_level);
 }
 
 void LedManager::update()
 {
     switch (mode)
     {
+    case off:
+        controller->jumpToTarget();
+        break;
+    case saved_level:
+        controller->jumpToTarget();
+        break;
     case blinking:
     {
-        unsigned now = millis();
-        if ((now - lastBlink) > blinkSpeed)
+        unsigned long now = millis();
+        if ((now - lastBlink) > blinkInterval)
         {
             lastBlink = now;
-            blinkState = ~blinkState;
-
-            for (byte i = 0; i < ledCount; i++)
-            {
-                targetLetBrightness[i] = blinkState;
-            }
+            controller->setTarget(~controller->getTarget());
         }
+        controller->jumpToTarget();
+        break;
+    }
+    case pulsing:
+    {
+        if (controller->reachedTarget())
+        {
+            controller->setTarget(~controller->getTarget());
+        }
+        controller->moveToTarget(millis());
+        break;
     }
     default:
         break;
     }
-    writeLedOutput();
 }
 
 void LedManager::changeLedLevel()
 {
     ledLevelIndex = (ledLevelIndex + 1) % LED_LEVELS_COUNT;
-    writeLedOutput();
+    controller->setTarget(LED_LEVELS[ledLevelIndex]);
     Serial.print(F("Increase Led to "));
     Serial.println(LED_LEVELS[ledLevelIndex]);
 }
@@ -73,6 +85,7 @@ void LedManager::restoreLedLevel()
     {
         Serial.print(F("Loaded Led level "));
         Serial.println(LED_LEVELS[ledLevelIndex]);
+        controller->setTarget(LED_LEVELS[ledLevelIndex]);
     }
 }
 
@@ -84,51 +97,37 @@ void LedManager::setMode(LedMode mode)
         this->mode = mode;
         switch (this->mode)
         {
-        case constant:
-            for (byte i = 0; i < ledCount; i++)
-            {
-                targetLetBrightness[i] = LED_LEVELS[ledLevelIndex];
-            }
-            break;
-        case custom:
-            for (byte i = 0; i < ledCount; i++)
-            {
-                targetLetBrightness[i] = 0;
-            }
+        case saved_level:
+            controller->setTarget(LED_LEVELS[ledLevelIndex]);
             break;
         case blinking:
-            for (byte i = 0; i < ledCount; i++)
-            {
-                targetLetBrightness[i] = 0;
-            }
-            blinkState = 0;
+            controller->setTarget(0);
             lastBlink = millis();
+            break;
+        case pulsing:
+            controller->setTarget(0);
+            controller->setSpeed(128);
+            lastBlink = millis();
+            break;
+        case off:
+            controller->setTarget(0);
+            break;
         default:
             break;
         }
     }
 }
 
-void LedManager::setBlinkSpeed(unsigned long blinkSpeed) {
-    this->blinkSpeed = blinkSpeed;
+void LedManager::setBlinkInterval(unsigned long blinkInterval)
+{
+    this->blinkInterval = blinkInterval;
 }
 
-void LedManager::setLedBrightness(byte led, byte level)
+void LedManager::writeLedOuptut(void *instance, int value)
 {
-    if (mode == custom && led < ledCount)
+    LedManager *manager = (LedManager *)instance;
+    for (byte i = 0; i < manager->ledCount; i++)
     {
-        targetLetBrightness[led] = level;
-    }
-}
-
-void LedManager::writeLedOutput()
-{
-    for (byte i = 0; i < ledCount; i++)
-    {
-        if (currentLedBrightness[i] != targetLetBrightness[i])
-        {
-            analogWrite(ledPins[i], targetLetBrightness[i]);
-            currentLedBrightness[i] = targetLetBrightness[i];
-        }
+        analogWrite(manager->ledPins[i], value);
     }
 }
