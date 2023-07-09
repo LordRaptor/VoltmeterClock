@@ -14,6 +14,7 @@ Voltmeter::Voltmeter(int pin, int speed)
 void Voltmeter::setTarget(int target)
 {
     this->targetValue = target % 256;
+    this->lastUpdate = millis();
 };
 
 void Voltmeter::setSpeed(int speed)
@@ -23,14 +24,18 @@ void Voltmeter::setSpeed(int speed)
 
 bool Voltmeter::update()
 {
-    unsigned long now = millis();
     if (currentValue != targetValue)
     {
-        currentValue = lerp(currentValue, targetValue, speed, now - lastUpdate);
+        unsigned long now = millis();
+        int newCurrent = lerp(currentValue, targetValue, speed, now - lastUpdate);
+        if (newCurrent != currentValue)
+        {
+            lastUpdate = now;
+            analogWrite(pin, currentValue);
+        }
+        currentValue = newCurrent;
     }
-    lastUpdate = now; //Keep updating this so there is no sudden jumps
 
-    analogWrite(pin, currentValue);
     return currentValue == targetValue;
 }
 
