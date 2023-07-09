@@ -14,11 +14,11 @@ EEWL storedState(ledLevelIndex, BUFFER_LEN, BUFFER_START);
 
 LedManager::LedManager(byte pin1, byte pin2, byte pin3)
 {
-    this->ledCount = 3;
-    this->ledPins[0] = pin1;
-    this->ledPins[1] = pin2;
-    this->ledPins[2] = pin3;
-    this->controller = new SpeedLimitedController(&writeLedOuptut, this, 255);
+    this->controller = new PWMController();
+    this->controller->addPin(pin1);
+    this->controller->addPin(pin2);
+    this->controller->addPin(pin3);
+
 }
 
 void LedManager::begin()
@@ -52,6 +52,7 @@ void LedManager::update()
     }
     case pulsing:
     {
+
         if (controller->reachedTarget())
         {
             controller->setTarget(~controller->getTarget());
@@ -68,14 +69,14 @@ void LedManager::changeLedLevel()
 {
     ledLevelIndex = (ledLevelIndex + 1) % LED_LEVELS_COUNT;
     controller->setTarget(LED_LEVELS[ledLevelIndex]);
-    Serial.print(F("Increase Led to "));
+    Serial.print(F("Change LED brightness to "));
     Serial.println(LED_LEVELS[ledLevelIndex]);
 }
 
 void LedManager::saveLedLevel()
 {
     storedState.put(ledLevelIndex);
-    Serial.print(F("Saved Led level "));
+    Serial.print(F("Saved LED brightness "));
     Serial.println(LED_LEVELS[ledLevelIndex]);
 }
 
@@ -83,7 +84,7 @@ void LedManager::restoreLedLevel()
 {
     if (storedState.get(ledLevelIndex))
     {
-        Serial.print(F("Loaded Led level "));
+        Serial.print(F("Loaded LED brightness "));
         Serial.println(LED_LEVELS[ledLevelIndex]);
         controller->setTarget(LED_LEVELS[ledLevelIndex]);
     }
@@ -121,13 +122,4 @@ void LedManager::setMode(LedMode mode)
 void LedManager::setBlinkInterval(unsigned long blinkInterval)
 {
     this->blinkInterval = blinkInterval;
-}
-
-void LedManager::writeLedOuptut(void *instance, int value)
-{
-    LedManager *manager = (LedManager *)instance;
-    for (byte i = 0; i < manager->ledCount; i++)
-    {
-        analogWrite(manager->ledPins[i], value);
-    }
 }

@@ -252,8 +252,8 @@ void enterCalibration()
   voltmeterManager.updateTime(tmpTime.hours, tmpTime.minutes, tmpTime.seconds);
   ledManager.setMode(pulsing);
 
-  while (!voltmeterManager.updateVoltmeters())
-    ;
+//  while (!voltmeterManager.updateVoltmeters())
+//    ;
 
   state = calibration;
 }

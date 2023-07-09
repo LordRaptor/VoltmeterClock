@@ -2,7 +2,7 @@
 #define LedManager_h
 
 #include "Arduino.h"
-#include "controller/SpeedLimitedController.h"
+#include "controller/PWMController.h"
 
 enum LedMode {
     saved_level,
@@ -29,12 +29,6 @@ class LedManager {
 
 
     private:
-    static void writeLedOuptut(void* instance, int value);
-
-
-    byte ledPins[3];
-    int ledCount;
-
     const byte LED_LEVELS_COUNT = 5;
     const byte LED_LEVELS[5] = {0, 64, 128, 192, 255};
 
@@ -43,7 +37,7 @@ class LedManager {
     unsigned long blinkInterval = 750;
     unsigned long lastBlink = 0;
 
-    SpeedLimitedController* controller;
+    PWMController* controller;
 };
 
 #endif
