@@ -15,17 +15,28 @@ DisplayMode displayMode;
 
 EEWL storedDisplayMode(displayMode, BUFFER_LEN, BUFFER_START);
 
-VoltmeterManager::VoltmeterManager(Voltmeter *hoursVoltmeter, Voltmeter *minutesVoltmeter, Voltmeter *secondsVoltmeter)
+VoltmeterManager::VoltmeterManager(VoltmeterConfig config)
 {
-    this->hoursVoltmeter = hoursVoltmeter;
-    this->minutesVoltmeter = minutesVoltmeter;
-    this->secondsVoltmeter = secondsVoltmeter;
+    this->hoursVoltmeter = new PWMController();
+    this->hoursVoltmeter->addPin(config.hoursPin);
+    this->hoursVoltmeter->setSpeed(config.changeRate);
+
+    this->minutesVoltmeter = new PWMController();
+    this->minutesVoltmeter->addPin(config.minutesPin);
+    this->minutesVoltmeter->setSpeed(config.changeRate);
+
+    this->secondsVoltmeter = new PWMController();
+    this->secondsVoltmeter->addPin(config.secondsPin);
+    this->secondsVoltmeter->setSpeed(config.changeRate);
 }
 
 void VoltmeterManager::begin()
 {
     storedDisplayMode.begin();
     resetDisplayMode();
+    this->hoursVoltmeter->begin();
+    this->minutesVoltmeter->begin();
+    this->secondsVoltmeter->begin();
 }
 
 void VoltmeterManager::setDisplayMode(DisplayMode mode)
@@ -106,9 +117,9 @@ bool VoltmeterManager::updateVoltmeters()
     minutesVoltmeter->setTarget(minutesTarget);
     secondsVoltmeter->setTarget(secondsTarget);
 
-    bool hoursTargetReached = hoursVoltmeter->update();
-    bool minutesTargetReached = minutesVoltmeter->update();
-    bool secondsTargetReached = secondsVoltmeter->update();
+    hoursVoltmeter->moveToTarget();
+    minutesVoltmeter->moveToTarget();
+    secondsVoltmeter->moveToTarget();
 
-    return hoursTargetReached && minutesTargetReached && secondsTargetReached;
+    return hoursVoltmeter->reachedTarget() && minutesVoltmeter->reachedTarget() && secondsVoltmeter->reachedTarget();
 }

@@ -64,9 +64,11 @@ TimeData tmpTime = {};
 LedManager ledManager(HOURS_LED_PIN, MINUTES_LED_PIN, SECONDS_LED_PIN);
 
 VoltmeterManager voltmeterManager(
-    new Voltmeter(HOURS_VOLTMETER_PIN, VOLTMETER_STEPS_PER_SECOND),
-    new Voltmeter(MINUTES_VOLTMETER_PIN, VOLTMETER_STEPS_PER_SECOND),
-    new Voltmeter(SECONDS_VOLTMETER_PIN, VOLTMETER_STEPS_PER_SECOND));
+    VoltmeterConfig{
+        HOURS_VOLTMETER_PIN,
+        MINUTES_VOLTMETER_PIN,
+        SECONDS_VOLTMETER_PIN,
+        VOLTMETER_STEPS_PER_SECOND});
 
 Switch button1 = Switch(BUTTON_1_PIN, INPUT_PULLUP, LOW, 50, 1000, 250, 10);
 Switch button2 = Switch(BUTTON_2_PIN);
@@ -109,7 +111,7 @@ void setup()
 
   voltmeterManager.begin();
 
-  state = displayTime;
+  state = startup;
 }
 
 void loop()
@@ -126,11 +128,9 @@ void loop()
     break;
   case displayTime:
     displayTimeLoop();
-    voltmeterManager.updateVoltmeters();
     break;
   case setting:
     settingStateLoop();
-    voltmeterManager.updateVoltmeters();
     break;
   case calibration:
     calibrationStateLoop();
@@ -139,6 +139,7 @@ void loop()
     break;
   }
 
+  voltmeterManager.updateVoltmeters();
   ledManager.update();
 }
 
@@ -187,6 +188,7 @@ void displayTimeLoop()
 
   writeTimetoSerial(hours, minutes, seconds);
   voltmeterManager.updateTime(hours, minutes, seconds);
+
 }
 
 void enterSettings()
@@ -225,6 +227,7 @@ void settingStateLoop()
     writeTimetoSerial(tmpTime.hours, tmpTime.minutes, tmpTime.seconds);
     voltmeterManager.updateTime(tmpTime.hours, tmpTime.minutes, tmpTime.seconds);
   }
+
 }
 
 void exitSettings()
@@ -252,9 +255,6 @@ void enterCalibration()
   voltmeterManager.updateTime(tmpTime.hours, tmpTime.minutes, tmpTime.seconds);
   ledManager.setMode(pulsing);
 
-//  while (!voltmeterManager.updateVoltmeters())
-//    ;
-
   state = calibration;
 }
 
@@ -279,6 +279,7 @@ void calibrationStateLoop()
     voltmeterManager.updateTime(tmpTime.hours, tmpTime.minutes, tmpTime.seconds);
     writeTimetoSerial(tmpTime.hours, tmpTime.minutes, tmpTime.seconds);
   }
+
 }
 
 void exitCalibration()

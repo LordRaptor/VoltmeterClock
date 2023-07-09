@@ -1,8 +1,9 @@
 #ifndef VoltmeterManager_h
 #define VoltmeterManager_h
 
-#include "Voltmeter.h"
+#include "Arduino.h"
 #include "stdint.h"
+#include "controller/PWMController.h"
 
 enum DisplayMode
 {
@@ -11,19 +12,26 @@ enum DisplayMode
 
 };
 
+struct VoltmeterConfig {
+    byte hoursPin;
+    byte minutesPin;
+    byte secondsPin;
+    int changeRate;
+};
+
 class VoltmeterManager
 {
 private:
-    Voltmeter *hoursVoltmeter;
-    Voltmeter *minutesVoltmeter;
-    Voltmeter *secondsVoltmeter;
+    PWMController *hoursVoltmeter;
+    PWMController *minutesVoltmeter;
+    PWMController *secondsVoltmeter;
 
     uint8_t currentHours;
     uint8_t currentMinutes;
     uint8_t currentSeconds;
 
 public:
-    VoltmeterManager(Voltmeter *hoursVoltmeter, Voltmeter *minutesVoltmeter, Voltmeter *secondsVoltmeter);
+    VoltmeterManager(VoltmeterConfig config);
 
     void begin();
 

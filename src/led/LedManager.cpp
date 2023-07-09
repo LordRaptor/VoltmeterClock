@@ -57,7 +57,7 @@ void LedManager::update()
         {
             controller->setTarget(~controller->getTarget());
         }
-        controller->moveToTarget(millis());
+        controller->moveToTarget();
         break;
     }
     default:

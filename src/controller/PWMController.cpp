@@ -31,8 +31,11 @@ void PWMController::setSpeed(int unitsPerSecond)
 
 void PWMController::setTarget(byte target)
 {
-    this->targetValue = target;
-    this->lastUpdate = millis(); // To avoid jumps when setting a new target
+    if (this->targetValue != target)
+    {
+        this->targetValue = target;
+        this->lastUpdate = millis(); // To avoid jumps when setting a new target
+    }
 };
 
 byte PWMController::getTarget()
@@ -50,8 +53,9 @@ bool PWMController::reachedTarget()
     return currentValue == targetValue;
 };
 
-bool PWMController::moveToTarget(time_ms now)
+bool PWMController::moveToTarget()
 {
+    time_ms now = millis();
     if (currentValue == targetValue)
     {
         return true;
@@ -62,6 +66,16 @@ bool PWMController::moveToTarget(time_ms now)
     if (timeSinceLastUpdate > 0)
     {
         int changeInValue = round(unitsPerMs * timeSinceLastUpdate);
+
+        // Serial.print("Time since last update: ");
+        // Serial.print(timeSinceLastUpdate);
+        // Serial.print(", change in value: ");
+        // Serial.print(changeInValue);
+        // Serial.print(", current speed: ");
+        // Serial.print(unitsPerMs);
+        // Serial.print(", target: ");
+        // Serial.print(targetValue);
+
         if (changeInValue > 0)
         {
             if (currentValue < targetValue)
@@ -72,12 +86,14 @@ bool PWMController::moveToTarget(time_ms now)
             {
                 currentValue = max(currentValue - changeInValue, targetValue);
             }
-
+            // Serial.print(", updated value: ");
+            // Serial.print(currentValue);
             writeOutput();
 
             this->lastUpdate = now;
             return currentValue == targetValue;
         }
+        // Serial.println("");
     }
     return false;
 };

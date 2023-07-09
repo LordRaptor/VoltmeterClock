@@ -23,7 +23,7 @@ public:
     byte getTarget();
     byte getCurrent();
 
-    bool moveToTarget(time_ms now);
+    bool moveToTarget();
 
     bool reachedTarget();
 
