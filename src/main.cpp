@@ -64,8 +64,8 @@ struct DisplayTimeStateData
   unsigned long lastRTCPoll = 0;
   unsigned long lastSerialOutput = 0;
 
-  unsigned long rtcUpdateInterval = 100;
-  unsigned long serialOutputInterval = 5000;
+  unsigned long rtcUpdateInterval = 50;
+  unsigned long serialOutputInterval = 10000;
 };
 DisplayTimeStateData displayStateData = {};
 
