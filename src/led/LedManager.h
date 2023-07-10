@@ -23,9 +23,9 @@ class LedManager {
 
     void setBlinkInterval(unsigned long speed);
 
-    void changeLedLevel();
-    void saveLedLevel();
-    void restoreLedLevel();
+    void changeLedBrightness();
+    void saveLedBrightness();
+    void restoreLedBrightness();
 
 
     private:
@@ -37,7 +37,7 @@ class LedManager {
     unsigned long blinkInterval = 750;
     unsigned long lastBlink = 0;
 
-    PWMController* controller;
+    PWMController controller = PWMController();
 };
 
 #endif

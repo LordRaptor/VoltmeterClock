@@ -16,19 +16,21 @@ struct VoltmeterConfig {
     byte hoursPin;
     byte minutesPin;
     byte secondsPin;
-    int changeRate;
+    int stepsPerSecond;
 };
 
 class VoltmeterManager
 {
 private:
-    PWMController *hoursVoltmeter;
-    PWMController *minutesVoltmeter;
-    PWMController *secondsVoltmeter;
+    PWMController hoursVoltmeter = PWMController();
+    PWMController minutesVoltmeter = PWMController();
+    PWMController secondsVoltmeter = PWMController();
 
     uint8_t currentHours;
     uint8_t currentMinutes;
     uint8_t currentSeconds;
+
+    void setVoltmeterTargets();
 
 public:
     VoltmeterManager(VoltmeterConfig config);
@@ -40,6 +42,7 @@ public:
     void changeDisplayMode();
     void saveCurrentDisplayMode();
     void resetDisplayMode();
+    void setStepsPerSecond(int stepsPerSecond);
 
     void updateTime(uint8_t hours, uint8_t minutes, uint8_t seconds);
 

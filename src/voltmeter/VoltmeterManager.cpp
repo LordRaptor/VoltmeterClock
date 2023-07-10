@@ -17,26 +17,24 @@ EEWL storedDisplayMode(displayMode, BUFFER_LEN, BUFFER_START);
 
 VoltmeterManager::VoltmeterManager(VoltmeterConfig config)
 {
-    this->hoursVoltmeter = new PWMController();
-    this->hoursVoltmeter->addPin(config.hoursPin);
-    this->hoursVoltmeter->setSpeed(config.changeRate);
+    this->hoursVoltmeter.addPin(config.hoursPin);
+    this->hoursVoltmeter.setSpeed(config.stepsPerSecond);
 
-    this->minutesVoltmeter = new PWMController();
-    this->minutesVoltmeter->addPin(config.minutesPin);
-    this->minutesVoltmeter->setSpeed(config.changeRate);
+    this->minutesVoltmeter.addPin(config.minutesPin);
+    this->minutesVoltmeter.setSpeed(config.stepsPerSecond);
 
-    this->secondsVoltmeter = new PWMController();
-    this->secondsVoltmeter->addPin(config.secondsPin);
-    this->secondsVoltmeter->setSpeed(config.changeRate);
+    this->secondsVoltmeter.addPin(config.secondsPin);
+    this->secondsVoltmeter.setSpeed(config.stepsPerSecond);
 }
 
 void VoltmeterManager::begin()
 {
     storedDisplayMode.begin();
     resetDisplayMode();
-    this->hoursVoltmeter->begin();
-    this->minutesVoltmeter->begin();
-    this->secondsVoltmeter->begin();
+
+    this->hoursVoltmeter.begin();
+    this->minutesVoltmeter.begin();
+    this->secondsVoltmeter.begin();
 }
 
 void VoltmeterManager::setDisplayMode(DisplayMode mode)
@@ -44,7 +42,10 @@ void VoltmeterManager::setDisplayMode(DisplayMode mode)
     if (displayMode != mode)
     {
         displayMode = mode;
-        updateVoltmeters();
+        Serial.print(F("Set display mode to: "));
+        Serial.println(displayMode);
+
+        setVoltmeterTargets();
     }
 }
 
@@ -74,18 +75,28 @@ void VoltmeterManager::resetDisplayMode()
     {
         displayMode = analog;
     }
+    setVoltmeterTargets();
+}
+
+void VoltmeterManager::setStepsPerSecond(int stepsPerSecond) {
+    hoursVoltmeter.setSpeed(stepsPerSecond);
+    minutesVoltmeter.setSpeed(stepsPerSecond);
+    secondsVoltmeter.setSpeed(stepsPerSecond);
 }
 
 void VoltmeterManager::updateTime(uint8_t hours, uint8_t minutes, uint8_t seconds)
 {
-    currentHours = hours;
-    currentMinutes = minutes;
-    currentSeconds = seconds;
+    if (currentHours != hours || currentMinutes != minutes || currentSeconds != seconds)
+    {
+        currentHours = hours;
+        currentMinutes = minutes;
+        currentSeconds = seconds;
 
-    updateVoltmeters();
+        setVoltmeterTargets();
+    }
 }
 
-bool VoltmeterManager::updateVoltmeters()
+void VoltmeterManager::setVoltmeterTargets()
 {
     int hoursTarget;
     int minutesTarget;
@@ -113,13 +124,16 @@ bool VoltmeterManager::updateVoltmeters()
     }
     }
 
-    hoursVoltmeter->setTarget(hoursTarget);
-    minutesVoltmeter->setTarget(minutesTarget);
-    secondsVoltmeter->setTarget(secondsTarget);
+    hoursVoltmeter.setTarget(hoursTarget);
+    minutesVoltmeter.setTarget(minutesTarget);
+    secondsVoltmeter.setTarget(secondsTarget);
+}
 
-    hoursVoltmeter->moveToTarget();
-    minutesVoltmeter->moveToTarget();
-    secondsVoltmeter->moveToTarget();
+bool VoltmeterManager::updateVoltmeters()
+{
+    hoursVoltmeter.moveToTarget();
+    minutesVoltmeter.moveToTarget();
+    secondsVoltmeter.moveToTarget();
 
-    return hoursVoltmeter->reachedTarget() && minutesVoltmeter->reachedTarget() && secondsVoltmeter->reachedTarget();
+    return hoursVoltmeter.reachedTarget() && minutesVoltmeter.reachedTarget() && secondsVoltmeter.reachedTarget();
 }
