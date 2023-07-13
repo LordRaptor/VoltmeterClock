@@ -109,8 +109,8 @@ void VoltmeterManager::setVoltmeterTargets()
         float floatingMinutes = currentMinutes + (currentSeconds / 60.f);
         float floatingHours = currentHours + (floatingMinutes / 60.f);
 
-        minutesTarget = round(floatingMinutes * MINUTES_INTERVAL);
         hoursTarget = round(floatingHours * HOURS_INTERVAL);
+        minutesTarget = round(floatingMinutes * MINUTES_INTERVAL);
         secondsTarget = round(currentSeconds * SECONDS_INTERVAL);
         break;
     }
@@ -124,9 +124,9 @@ void VoltmeterManager::setVoltmeterTargets()
     }
     }
 
-    hoursVoltmeter.setTarget(hoursTarget);
-    minutesVoltmeter.setTarget(minutesTarget);
-    secondsVoltmeter.setTarget(secondsTarget);
+    hoursVoltmeter.setTarget(constrain(hoursTarget, 0, 255));
+    minutesVoltmeter.setTarget(constrain(minutesTarget, 0, 255));
+    secondsVoltmeter.setTarget(constrain(secondsTarget, 0, 255));
 }
 
 bool VoltmeterManager::updateVoltmeters()

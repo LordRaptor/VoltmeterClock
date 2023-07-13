@@ -9,7 +9,7 @@
 #define HOURS_VOLTMETER_PIN 11
 #define MINUTES_VOLTMETER_PIN 10
 #define SECONDS_VOLTMETER_PIN 9
-#define VOLTMETER_STEPS_PER_SECOND 255
+#define VOLTMETER_STEPS_PER_SECOND 128
 
 // LEDs
 #define HOURS_LED_PIN 6
@@ -152,18 +152,26 @@ void loop()
 void startupRoutine()
 {
   voltmeterManager.setStepsPerSecond(64);
-  voltmeterManager.setDisplayMode(analog);
+  voltmeterManager.setDisplayMode(digital);
   voltmeterManager.updateTime(24, 60, 60);
+  ledManager.setMode(pulsing);
 
-  while (!voltmeterManager.updateVoltmeters())
-    ;
+  while (!voltmeterManager.updateVoltmeters()) {
+    ledManager.update();
+  }
+    
 
   voltmeterManager.updateTime(0, 0, 0);
-  while (!voltmeterManager.updateVoltmeters())
-    ;
+  while (!voltmeterManager.updateVoltmeters()) {
+        ledManager.update();
+  }
+    
 
   voltmeterManager.resetDisplayMode();
   voltmeterManager.setStepsPerSecond(VOLTMETER_STEPS_PER_SECOND);
+  ledManager.setMode(saved_level);
+  ledManager.restoreLedBrightness();
+  ledManager.update();
 
   Serial.println(F("Startup completed"));
   if (rtc.lostPower())
@@ -279,19 +287,19 @@ void enterCalibration()
 void calibrationStateLoop()
 {
   // Used to calibrate the voltmeters
-  if (button1.pushed())
+  if (button1.singleClick())
   {
     rtcTimeHolder.hours = (rtcTimeHolder.hours + 1) % 25;
     voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
   }
-  else if (button2.pushed())
+  else if (button2.singleClick())
   {
     rtcTimeHolder.minutes = (rtcTimeHolder.minutes + 1) % 61;
     voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
   }
-  else if (button3.pushed())
+  else if (button3.singleClick())
   {
     rtcTimeHolder.seconds = (rtcTimeHolder.seconds + 1) % 61;
     voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
