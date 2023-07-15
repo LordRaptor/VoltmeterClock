@@ -289,19 +289,19 @@ void calibrationStateLoop()
   // Used to calibrate the voltmeters
   if (button1.singleClick())
   {
-    rtcTimeHolder.hours = (rtcTimeHolder.hours + 1) % 25;
+    rtcTimeHolder.hours = (rtcTimeHolder.hours + 6) % 25;
     voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
   }
   else if (button2.singleClick())
   {
-    rtcTimeHolder.minutes = (rtcTimeHolder.minutes + 1) % 61;
+    rtcTimeHolder.minutes = (rtcTimeHolder.minutes + 15) % 61;
     voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
   }
   else if (button3.singleClick())
   {
-    rtcTimeHolder.seconds = (rtcTimeHolder.seconds + 1) % 61;
+    rtcTimeHolder.seconds = (rtcTimeHolder.seconds + 15) % 61;
     voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
   }
