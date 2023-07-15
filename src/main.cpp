@@ -9,7 +9,7 @@
 #define HOURS_VOLTMETER_PIN 11
 #define MINUTES_VOLTMETER_PIN 10
 #define SECONDS_VOLTMETER_PIN 9
-#define VOLTMETER_STEPS_PER_SECOND 128
+#define VOLTMETER_STEPS_PER_SECOND 255
 
 // LEDs
 #define HOURS_LED_PIN 6
@@ -289,19 +289,19 @@ void calibrationStateLoop()
   // Used to calibrate the voltmeters
   if (button1.singleClick())
   {
-    rtcTimeHolder.hours = (rtcTimeHolder.hours + 6) % 25;
+    rtcTimeHolder.hours = rtcTimeHolder.hours < 24 ? rtcTimeHolder.hours + 6 : 0;
     voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
   }
   else if (button2.singleClick())
   {
-    rtcTimeHolder.minutes = (rtcTimeHolder.minutes + 15) % 61;
+    rtcTimeHolder.minutes = rtcTimeHolder.minutes < 60 ? rtcTimeHolder.minutes + 15 : 0;
     voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
   }
   else if (button3.singleClick())
   {
-    rtcTimeHolder.seconds = (rtcTimeHolder.seconds + 15) % 61;
+    rtcTimeHolder.seconds = rtcTimeHolder.seconds < 60 ? rtcTimeHolder.seconds + 15 : 0;
     voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
   }
