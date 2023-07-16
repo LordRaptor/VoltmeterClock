@@ -79,7 +79,7 @@ VoltmeterManager voltmeterManager(
         VOLTMETER_STEPS_PER_SECOND});
 
 Switch button1 = Switch(BUTTON_1_PIN, INPUT_PULLUP, LOW, 50, 1000, 250, 10);
-Switch button2 = Switch(BUTTON_2_PIN);
+Switch button2 = Switch(BUTTON_2_PIN, INPUT_PULLUP, LOW, 50, 4000, 250, 10);
 Switch button3 = Switch(BUTTON_3_PIN, INPUT_PULLUP, LOW, 50, 4000, 250, 10);
 
 RTC_DS3231 rtc;
@@ -156,16 +156,16 @@ void startupRoutine()
   voltmeterManager.updateTime(24, 60, 60);
   ledManager.setMode(pulsing);
 
-  while (!voltmeterManager.updateVoltmeters()) {
+  while (!voltmeterManager.updateVoltmeters())
+  {
     ledManager.update();
   }
-    
 
   voltmeterManager.updateTime(0, 0, 0);
-  while (!voltmeterManager.updateVoltmeters()) {
-        ledManager.update();
+  while (!voltmeterManager.updateVoltmeters())
+  {
+    ledManager.update();
   }
-    
 
   voltmeterManager.resetDisplayMode();
   voltmeterManager.setStepsPerSecond(VOLTMETER_STEPS_PER_SECOND);
@@ -201,6 +201,8 @@ void displayTimeLoop()
   }
   if (displayStateData.serialOutputInterval <= (localNow - displayStateData.lastSerialOutput))
   {
+    Serial.print(rtc.getTemperature());
+    Serial.print("°C ");
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
     displayStateData.lastSerialOutput = localNow;
   }
@@ -316,7 +318,7 @@ void exitCalibration()
   displayStateData.lastRTCPoll = 0;
   displayStateData.lastSerialOutput = 0;
 
-  state = startup;
+  state = displayTime;
   Serial.println(F("Exiting calibration state"));
 }
 
