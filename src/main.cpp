@@ -78,9 +78,9 @@ VoltmeterManager voltmeterManager(
         SECONDS_VOLTMETER_PIN,
         VOLTMETER_STEPS_PER_SECOND});
 
-Switch button1 = Switch(BUTTON_1_PIN, INPUT_PULLUP, LOW, 50, 1000, 250, 10);
+Switch button1 = Switch(BUTTON_1_PIN, INPUT_PULLUP, LOW, 50, 4000, 250, 10);
 Switch button2 = Switch(BUTTON_2_PIN, INPUT_PULLUP, LOW, 50, 4000, 250, 10);
-Switch button3 = Switch(BUTTON_3_PIN, INPUT_PULLUP, LOW, 50, 4000, 250, 10);
+Switch button3 = Switch(BUTTON_3_PIN, INPUT_PULLUP, LOW, 50, 1000, 250, 10);
 
 RTC_DS3231 rtc;
 
@@ -237,17 +237,17 @@ void enterSettings()
 
 void settingStateLoop()
 {
-  if (button1.pushed())
+  if (button3.pushed())
   {
     exitSettings();
   }
-  else if (button2.pushed())
+  else if (button1.pushed())
   {
     rtcTimeHolder.hours = (rtcTimeHolder.hours + 1) % 24;
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
     voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
   }
-  else if (button3.pushed())
+  else if (button2.pushed())
   {
     rtcTimeHolder.minutes = (rtcTimeHolder.minutes + 1) % 60;
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
@@ -350,13 +350,13 @@ void buttonSingleClickedCallback(void *ref)
   Serial.print(F("Button clicked: "));
   Serial.println(b);
 
-  if (b == BUTTON_2_ID && state == displayTime)
+  if (b == BUTTON_1_ID && state == displayTime)
   {
     // Change LED brightness
     ledManager.changeLedBrightness();
     ledManager.saveLedBrightness();
   }
-  else if (b == BUTTON_3_ID && state == displayTime)
+  else if (b == BUTTON_2_ID && state == displayTime)
   {
     // Change voltmeter display mode
     voltmeterManager.changeDisplayMode();
@@ -371,11 +371,11 @@ void buttonLongPressedCallback(void *ref)
   Serial.print(F("Button long pressed: "));
   Serial.println(b);
 
-  if (b == BUTTON_1_ID && state == displayTime)
+  if (b == BUTTON_3_ID && state == displayTime)
   {
     enterSettings();
   }
-  else if (b == BUTTON_3_ID)
+  else if (b == BUTTON_1_ID)
   {
     if (state == displayTime)
     {

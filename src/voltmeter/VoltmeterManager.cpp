@@ -43,7 +43,18 @@ void VoltmeterManager::setDisplayMode(DisplayMode mode)
     {
         displayMode = mode;
         Serial.print(F("Set display mode to: "));
-        Serial.println(displayMode);
+        switch (displayMode)
+        {
+        case analog:
+            Serial.println(F("analog"));
+            break;
+        case digital:
+            Serial.println(F("digital"));
+            break;
+        default:
+            Serial.println(displayMode);
+            break;
+        }
 
         setVoltmeterTargets();
     }
@@ -78,7 +89,8 @@ void VoltmeterManager::resetDisplayMode()
     setVoltmeterTargets();
 }
 
-void VoltmeterManager::setStepsPerSecond(int stepsPerSecond) {
+void VoltmeterManager::setStepsPerSecond(int stepsPerSecond)
+{
     hoursVoltmeter.setSpeed(stepsPerSecond);
     minutesVoltmeter.setSpeed(stepsPerSecond);
     secondsVoltmeter.setSpeed(stepsPerSecond);
