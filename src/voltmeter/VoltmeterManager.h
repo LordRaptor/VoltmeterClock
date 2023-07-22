@@ -29,6 +29,7 @@ private:
     uint8_t currentHours;
     uint8_t currentMinutes;
     uint8_t currentSeconds;
+    unsigned long currentMillis;
 
     void setVoltmeterTargets();
 
@@ -44,9 +45,11 @@ public:
     void resetDisplayMode();
     void setStepsPerSecond(int stepsPerSecond);
 
-    void updateTime(uint8_t hours, uint8_t minutes, uint8_t seconds);
+    void updateTime(uint8_t hours, uint8_t minutes, uint8_t seconds, unsigned long millis);
 
     bool updateVoltmeters();
+
+    void printTargets();
 };
 
 #endif

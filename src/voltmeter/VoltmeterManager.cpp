@@ -2,9 +2,9 @@
 #define BUFFER_START 0x30 // buffer start address
 #define BUFFER_LEN 10     // number of data blocks
 
-#define HOURS_INTERVAL (255 / 24.f)
-#define MINUTES_INTERVAL (255 / 60.f)
-#define SECONDS_INTERVAL (255 / 60.f)
+#define HOURS_INTERVAL (240 / 24.f)
+#define MINUTES_INTERVAL (240 / 60.f)
+#define SECONDS_INTERVAL (240 / 60.f)
 
 #include "VoltmeterManager.h"
 #include "EEPROM.h"
@@ -96,13 +96,14 @@ void VoltmeterManager::setStepsPerSecond(int stepsPerSecond)
     secondsVoltmeter.setSpeed(stepsPerSecond);
 }
 
-void VoltmeterManager::updateTime(uint8_t hours, uint8_t minutes, uint8_t seconds)
+void VoltmeterManager::updateTime(uint8_t hours, uint8_t minutes, uint8_t seconds, unsigned long millis)
 {
-    if (currentHours != hours || currentMinutes != minutes || currentSeconds != seconds)
+    if (currentHours != hours || currentMinutes != minutes || currentSeconds != seconds || (displayMode == analog && currentMillis != millis))
     {
         currentHours = hours;
         currentMinutes = minutes;
         currentSeconds = seconds;
+        currentMillis = millis;
 
         setVoltmeterTargets();
     }
@@ -118,12 +119,13 @@ void VoltmeterManager::setVoltmeterTargets()
     {
     case analog:
     {
-        float floatingMinutes = currentMinutes + (currentSeconds / 60.f);
+        float floatingSeconds = currentSeconds + (currentMillis / 1000.f);
+        float floatingMinutes = currentMinutes + (floatingSeconds / 60.f);
         float floatingHours = currentHours + (floatingMinutes / 60.f);
 
         hoursTarget = round(floatingHours * HOURS_INTERVAL);
         minutesTarget = round(floatingMinutes * MINUTES_INTERVAL);
-        secondsTarget = round(currentSeconds * SECONDS_INTERVAL);
+        secondsTarget = round(floatingSeconds * SECONDS_INTERVAL);
         break;
     }
     case digital:
@@ -148,4 +150,14 @@ bool VoltmeterManager::updateVoltmeters()
     secondsVoltmeter.moveToTarget();
 
     return hoursVoltmeter.reachedTarget() && minutesVoltmeter.reachedTarget() && secondsVoltmeter.reachedTarget();
+}
+
+void VoltmeterManager::printTargets() {
+    Serial.print(hoursVoltmeter.getTarget());
+    Serial.print(F(":"));
+    Serial.print(minutesVoltmeter.getTarget());
+    Serial.print(F(":"));
+    Serial.print(secondsVoltmeter.getTarget());
+    Serial.print(F("  "));
+
 }

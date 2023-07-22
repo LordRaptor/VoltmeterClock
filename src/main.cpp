@@ -62,6 +62,7 @@ TimeData rtcTimeHolder = {};
 struct DisplayTimeStateData
 {
   unsigned long lastRTCPoll = 0;
+  unsigned long lastSecondChange = 0;
   unsigned long lastSerialOutput = 0;
 
   unsigned long rtcUpdateInterval = 50;
@@ -153,7 +154,7 @@ void startupRoutine()
 {
   voltmeterManager.setStepsPerSecond(64);
   voltmeterManager.setDisplayMode(digital);
-  voltmeterManager.updateTime(24, 60, 60);
+  voltmeterManager.updateTime(24, 60, 60, 0);
   ledManager.setMode(pulsing);
 
   while (!voltmeterManager.updateVoltmeters())
@@ -161,7 +162,7 @@ void startupRoutine()
     ledManager.update();
   }
 
-  voltmeterManager.updateTime(0, 0, 0);
+  voltmeterManager.updateTime(0, 0, 0, 0);
   while (!voltmeterManager.updateVoltmeters())
   {
     ledManager.update();
@@ -194,9 +195,13 @@ void displayTimeLoop()
     DateTime rtcNow = rtc.now();
     rtcTimeHolder.hours = rtcNow.hour();
     rtcTimeHolder.minutes = rtcNow.minute();
-    rtcTimeHolder.seconds = rtcNow.second();
+    if (rtcNow.second() != rtcTimeHolder.seconds) {
+      rtcTimeHolder.seconds = rtcNow.second();
+      displayStateData.lastSecondChange = localNow;      
+    }
 
-    voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
+
+    voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, localNow - displayStateData.lastSecondChange);
     displayStateData.lastRTCPoll = localNow;
   }
   if (displayStateData.serialOutputInterval <= (localNow - displayStateData.lastSerialOutput))
@@ -230,7 +235,7 @@ void enterSettings()
   writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
 
   voltmeterManager.setDisplayMode(digital);
-  voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
+  voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, 0);
 
   ledManager.setMode(blinking);
 }
@@ -245,13 +250,13 @@ void settingStateLoop()
   {
     rtcTimeHolder.hours = (rtcTimeHolder.hours + 1) % 24;
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
-    voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
+    voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, 0);
   }
   else if (button2.pushed())
   {
     rtcTimeHolder.minutes = (rtcTimeHolder.minutes + 1) % 60;
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
-    voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
+    voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, 0);
   }
 }
 
@@ -280,7 +285,9 @@ void enterCalibration()
   rtcTimeHolder.minutes = 60;
   rtcTimeHolder.seconds = 60;
 
-  voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
+  voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, 0);
+  voltmeterManager.printTargets();
+  writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
   ledManager.setMode(pulsing);
 
   state = calibration;
@@ -292,19 +299,21 @@ void calibrationStateLoop()
   if (button1.singleClick())
   {
     rtcTimeHolder.hours = rtcTimeHolder.hours < 24 ? rtcTimeHolder.hours + 6 : 0;
-    voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
+    voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, 0);
+    voltmeterManager.printTargets();
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
   }
   else if (button2.singleClick())
   {
     rtcTimeHolder.minutes = rtcTimeHolder.minutes < 60 ? rtcTimeHolder.minutes + 15 : 0;
-    voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
+    voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, 0);
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
   }
   else if (button3.singleClick())
   {
     rtcTimeHolder.seconds = rtcTimeHolder.seconds < 60 ? rtcTimeHolder.seconds + 15 : 0;
-    voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
+    voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, 0);
+    voltmeterManager.printTargets();
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
   }
 }
@@ -361,6 +370,7 @@ void buttonSingleClickedCallback(void *ref)
     // Change voltmeter display mode
     voltmeterManager.changeDisplayMode();
     voltmeterManager.saveCurrentDisplayMode();
+    displayStateData.lastRTCPoll = 0; //Force update
   }
 }
 
