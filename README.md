@@ -2,6 +2,8 @@
 
 ## Buttons
 
+![Buttons](/images/Buttons.jpg)
+
 Buttons are counted left to right, with the leftmost button being Button 1
 
 
@@ -36,6 +38,8 @@ Long pressing __Button 1__ again for 4-5 seconds will exit this mode and normal 
 
 ## Backup power
 The clock includes a slot for a CR2032 3V coin cell battery to ensure time keeping even if main power is lost. To replace the battery, open the clock by removing the four (4) screws at the bottom of the clock and lifting off the outer case. Insert the coin cell battery into the holder located on the small module in the clock (see picture).
+
+![Coin cell battery location](/images/BackupBattery.jpg)
 
 ## Power Supply
 Ideally the clock is powered using a 5.5 X 2.1 jack with a 7V power supply. The clock will work with up to 12V, but it is not recommended.
