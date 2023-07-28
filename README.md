@@ -32,9 +32,9 @@ Press __Button 3__ until the backlight LEDs start blinking (1-2 seconds). The cl
 ## Calibration Mode
 Not used in normal operation.
 
-Pressing __Button 1__ for 4-5 seconds will enter calibration mode, backlight LEDs  will start pulsing slowly. This mode is used to calibrate the displays,
+Pressing __Button 1__ for 1-2 seconds will enter calibration mode, backlight LEDs  will start pulsing slowly. This mode is used to calibrate the displays,
 adjusting the display potentiometers on the circuit board until the indicators points to the end of the dial scale. Buttons will increment the dials above them.
-Long pressing __Button 1__ again for 4-5 seconds will exit this mode and normal operation will resume.
+Long pressing __Button 1__ again for 1-2 seconds will exit this mode and normal operation will resume.
 
 ## Backup power
 The clock includes a slot for a CR2032 3V coin cell battery to ensure time keeping even if main power is lost. To replace the battery, open the clock by removing the four (4) screws at the bottom of the clock and lifting off the outer case. Insert the coin cell battery into the holder located on the small module in the clock (see picture).
