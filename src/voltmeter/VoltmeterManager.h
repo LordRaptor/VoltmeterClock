@@ -9,10 +9,10 @@ enum DisplayMode
 {
     analog,
     digital
-
 };
 
-struct VoltmeterConfig {
+struct VoltmeterConfig
+{
     byte hoursPin;
     byte minutesPin;
     byte secondsPin;
@@ -32,6 +32,14 @@ private:
     unsigned long currentMillis;
 
     void setVoltmeterTargets();
+
+    uint8_t hourTargetValues[25] = {
+        0, 12, 20, 32, 40, 52, 62,
+        72, 81, 92, 102, 113, 122,
+        134, 144, 154, 162, 172, 181,
+        190, 200, 210, 218, 228, 240};
+
+    uint8_t getHourTarget(float value);
 
 public:
     VoltmeterManager(VoltmeterConfig config);

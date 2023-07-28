@@ -79,7 +79,7 @@ VoltmeterManager voltmeterManager(
         SECONDS_VOLTMETER_PIN,
         VOLTMETER_STEPS_PER_SECOND});
 
-Switch button1 = Switch(BUTTON_1_PIN, INPUT_PULLUP, LOW, 50, 4000, 250, 10);
+Switch button1 = Switch(BUTTON_1_PIN, INPUT_PULLUP, LOW, 50, 1000, 250, 10);
 Switch button2 = Switch(BUTTON_2_PIN, INPUT_PULLUP, LOW, 50, 4000, 250, 10);
 Switch button3 = Switch(BUTTON_3_PIN, INPUT_PULLUP, LOW, 50, 1000, 250, 10);
 
@@ -195,11 +195,11 @@ void displayTimeLoop()
     DateTime rtcNow = rtc.now();
     rtcTimeHolder.hours = rtcNow.hour();
     rtcTimeHolder.minutes = rtcNow.minute();
-    if (rtcNow.second() != rtcTimeHolder.seconds) {
+    if (rtcNow.second() != rtcTimeHolder.seconds)
+    {
       rtcTimeHolder.seconds = rtcNow.second();
-      displayStateData.lastSecondChange = localNow;      
+      displayStateData.lastSecondChange = localNow;
     }
-
 
     voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, localNow - displayStateData.lastSecondChange);
     displayStateData.lastRTCPoll = localNow;
@@ -307,6 +307,7 @@ void calibrationStateLoop()
   {
     rtcTimeHolder.minutes = rtcTimeHolder.minutes < 60 ? rtcTimeHolder.minutes + 5 : 0;
     voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, 0);
+    voltmeterManager.printTargets();
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
   }
   else if (button3.singleClick())
@@ -370,7 +371,7 @@ void buttonSingleClickedCallback(void *ref)
     // Change voltmeter display mode
     voltmeterManager.changeDisplayMode();
     voltmeterManager.saveCurrentDisplayMode();
-    displayStateData.lastRTCPoll = 0; //Force update
+    displayStateData.lastRTCPoll = 0; // Force update
   }
 }
 

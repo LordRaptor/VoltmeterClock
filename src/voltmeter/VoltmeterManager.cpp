@@ -98,6 +98,11 @@ void VoltmeterManager::setStepsPerSecond(int stepsPerSecond)
 
 void VoltmeterManager::updateTime(uint8_t hours, uint8_t minutes, uint8_t seconds, unsigned long millis)
 {
+    hours = constrain(hours, 0, 24);
+    minutes = constrain(minutes, 0, 60);
+    seconds = constrain(seconds, 0, 60);
+    millis = constrain(millis, 0L, 1000L);
+
     if (currentHours != hours || currentMinutes != minutes || currentSeconds != seconds || (displayMode == analog && currentMillis != millis))
     {
         currentHours = hours;
@@ -123,15 +128,14 @@ void VoltmeterManager::setVoltmeterTargets()
         float floatingMinutes = currentMinutes + (floatingSeconds / 60.f);
         float floatingHours = currentHours + (floatingMinutes / 60.f);
 
-        hoursTarget = round(floatingHours * HOURS_INTERVAL);
+        hoursTarget = getHourTarget(floatingHours);
         minutesTarget = round(floatingMinutes * MINUTES_INTERVAL);
         secondsTarget = round(floatingSeconds * SECONDS_INTERVAL);
         break;
     }
-    case digital:
     default:
     {
-        hoursTarget = round(currentHours * HOURS_INTERVAL);
+        hoursTarget = getHourTarget(currentHours);
         minutesTarget = round(currentMinutes * MINUTES_INTERVAL);
         secondsTarget = round(currentSeconds * SECONDS_INTERVAL);
         break;
@@ -143,6 +147,18 @@ void VoltmeterManager::setVoltmeterTargets()
     secondsVoltmeter.setTarget(constrain(secondsTarget, 0, 255));
 }
 
+uint8_t VoltmeterManager::getHourTarget(float value) {
+    long b = round(floor(value));
+
+    if (b >= 24) {
+        return hourTargetValues[b];
+    }
+
+    float t = value - b;
+
+    return round(hourTargetValues[b] + t * (hourTargetValues[b+1] - hourTargetValues[b]));
+}
+
 bool VoltmeterManager::updateVoltmeters()
 {
     hoursVoltmeter.moveToTarget();
@@ -152,12 +168,12 @@ bool VoltmeterManager::updateVoltmeters()
     return hoursVoltmeter.reachedTarget() && minutesVoltmeter.reachedTarget() && secondsVoltmeter.reachedTarget();
 }
 
-void VoltmeterManager::printTargets() {
+void VoltmeterManager::printTargets()
+{
     Serial.print(hoursVoltmeter.getTarget());
     Serial.print(F(":"));
     Serial.print(minutesVoltmeter.getTarget());
     Serial.print(F(":"));
     Serial.print(secondsVoltmeter.getTarget());
     Serial.print(F("  "));
-
 }
