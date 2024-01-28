@@ -732,7 +732,7 @@ byte ToneAlarm::getDuration(int index)
     case 5:
         return pgm_read_byte_near(marioDurations + index);
     case 6:
-        return pgm_read_byte_near(pacmanNotes + index);
+        return pgm_read_byte_near(pacmanDurations + index);
     default:
         return 0;
     }

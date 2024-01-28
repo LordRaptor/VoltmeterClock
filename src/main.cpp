@@ -31,6 +31,8 @@
 #define FRONT_SWITCH_UP 7
 #define FRONT_SWITCH_DOWN 8
 
+#define ALARM_LOOP_COUNT 10
+
 // put function declarations here:
 void startupRoutine();
 void displayTimeLoop();
@@ -272,7 +274,7 @@ void displayTimeLoop()
     if (rtc.alarmFired(1)) {
       Serial.println("Alarm fired");
       rtc.clearAlarm(1);
-      toneAlarm.start(10);
+      toneAlarm.start(ALARM_LOOP_COUNT);
     } else {
       toneAlarm.play();
     }
