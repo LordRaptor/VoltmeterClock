@@ -3,9 +3,6 @@
 #include "Arduino.h"
 #include "pitches.h" 
 
-typedef unsigned long time_ms;
-#define MELODY_COUNT 1;
-
 class ToneAlarm
 {
 public:
@@ -13,7 +10,7 @@ public:
 
     void begin();
 
-    void start();
+    void start(byte count);
     void play();
     void stop();
 
@@ -23,9 +20,14 @@ private:
     byte buzzerPin;
 
     int currentNote;
-    bool playing;
+    int currentMelodyLength;
+    byte playCount;
 
     unsigned long nextNote;
+
+    int getMelodyLenght();
+    uint16_t getNote(int index);
+    byte getDuration(int index);
 };
 
 #endif

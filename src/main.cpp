@@ -272,7 +272,7 @@ void displayTimeLoop()
     if (rtc.alarmFired(1)) {
       Serial.println("Alarm fired");
       rtc.clearAlarm(1);
-      toneAlarm.start();
+      toneAlarm.start(10);
     } else {
       toneAlarm.play();
     }
@@ -426,6 +426,8 @@ void alarmSetLoop() {
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
     voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, 0);
   }
+
+  toneAlarm.play();
 }
 
 void exitAlarmSet() {
@@ -441,6 +443,8 @@ void exitAlarmSet() {
   voltmeterManager.resetDisplayMode();
 
   ledManager.setMode(saved_level);
+
+  toneAlarm.stop();
 
   state = displayTime;
   Serial.print(F("Exiting alarm set state, alarm set to "));
@@ -475,12 +479,21 @@ void buttonSingleClickedCallback(void *ref)
   Serial.print(F("Button clicked: "));
   Serial.println(b);
 
-  if (b == MINUTES_SWITCH_ID && state == displayTime)
+  if (b == MINUTES_SWITCH_ID)
   {
-    // Change voltmeter display mode
-    voltmeterManager.changeDisplayMode();
-    voltmeterManager.saveCurrentDisplayMode();
-    displayStateData.lastRTCPoll = 0; // Force update
+    if (state == displayTime)
+    {
+      // Change voltmeter display mode
+      voltmeterManager.changeDisplayMode();
+      voltmeterManager.saveCurrentDisplayMode();
+      displayStateData.lastRTCPoll = 0; // Force update
+    }
+     else if (state == setAlarm)
+    {
+      toneAlarm.changeMelody();
+      toneAlarm.start(1);
+    }
+
   }
 }
 
