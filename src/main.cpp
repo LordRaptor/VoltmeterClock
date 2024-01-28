@@ -4,6 +4,7 @@
 #include <RTClib.h>
 #include <avdweb_Switch.h>
 #include <Encoder.h>
+#include <alarm/ToneAlarm.h>
 
 // Voltmeters
 // Do not use Pins 5 and 6 for Voltmeters
@@ -116,8 +117,9 @@ struct EncoderData
 EncoderData hourEncoderData = {};
 EncoderData minutesEncoderData = {};
 
-
 RTC_DS3231 rtc;
+
+ToneAlarm toneAlarm = ToneAlarm(BUZZER_PIN);
 
 void setup()
 {
@@ -155,6 +157,8 @@ void setup()
   ledManager.update();
 
   voltmeterManager.begin();
+
+  toneAlarm.begin();
 
   state = startup;
 }
@@ -268,7 +272,12 @@ void displayTimeLoop()
     if (rtc.alarmFired(1)) {
       Serial.println("Alarm fired");
       rtc.clearAlarm(1);
+      toneAlarm.start();
+    } else {
+      toneAlarm.play();
     }
+  } else {
+    toneAlarm.stop();
   }
 }
 
@@ -396,7 +405,6 @@ void enterAlarmSet() {
   rtcTimeHolder.seconds = 0;
 
   voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, 0);
-  voltmeterManager.printTargets();
   writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
   ledManager.setMode(pulsing);
 }
@@ -436,7 +444,7 @@ void exitAlarmSet() {
 
   state = displayTime;
   Serial.print(F("Exiting alarm set state, alarm set to "));
-  writeTimetoSerial(newAlarmTime.hour(), newAlarmTime.minute(), 0)
+  writeTimetoSerial(newAlarmTime.hour(), newAlarmTime.minute(), 0);
 }
 
 void writeTimetoSerial(uint8_t hours, uint8_t minutes, uint8_t seconds)
