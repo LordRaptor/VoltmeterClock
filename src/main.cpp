@@ -1,3 +1,5 @@
+#define VERBOSE_DEBUG
+
 #include <Arduino.h>
 #include <voltmeter/VoltmeterManager.h>
 #include <led/SmoothLedManager.h>
@@ -5,6 +7,9 @@
 #include <avdweb_Switch.h>
 #include <Encoder.h>
 #include <alarm/ToneAlarm.h>
+#include <TimeLib.h>
+#include <DCF77.h>
+
 
 // Voltmeters
 // Do not use Pins 5 and 6 for Voltmeters
@@ -31,6 +36,12 @@
 #define FRONT_SWITCH_UP 7
 #define FRONT_SWITCH_DOWN 8
 
+// DCF77 Receiver
+#define DCF_PIN 2
+#define DCF_INTERRUPT 0
+#define DCF_UPDATE_INTERVAL 3600000
+
+// Alarm
 #define ALARM_LOOP_COUNT 10
 
 // put function declarations here:
@@ -56,6 +67,8 @@ void buttonLongPressedCallback(void *ref);
 void buttonPushedCallback(void *ref);
 
 void readEncoders();
+
+void receiveDcfTime();
 
 const byte HOUR_SWITCH_ID = 1;
 const byte MINUTES_SWITCH_ID = 2;
@@ -123,6 +136,10 @@ RTC_DS3231 rtc;
 
 ToneAlarm toneAlarm = ToneAlarm(BUZZER_PIN);
 
+unsigned long lastDcfUpdate = -DCF_UPDATE_INTERVAL;
+time_t dcfTime;
+DCF77 dcfReceiver = DCF77(DCF_PIN,DCF_INTERRUPT);
+
 void setup()
 {
   pinMode(BUZZER_PIN, OUTPUT);
@@ -162,6 +179,8 @@ void setup()
 
   toneAlarm.begin();
 
+  dcfReceiver.Start();
+
   state = startup;
 }
 
@@ -195,6 +214,7 @@ void loop()
 
   voltmeterManager.updateVoltmeters();
   ledManager.update();
+  receiveDcfTime();
 }
 
 // put function definitions here:
@@ -555,4 +575,24 @@ void readEncoders() {
       minutesEncoderData.encoderUp = false;
   }
   minutesEncoderData.encoderPos = minutesEncoderData.newEncoderPos;
+}
+
+void receiveDcfTime() {
+  if (millis() - lastDcfUpdate > DCF_UPDATE_INTERVAL) {
+    dcfTime = dcfReceiver.getTime();
+    if (dcfTime != 0) 
+    {
+      rtc.adjust(DateTime(year(), month(), day(), hour(), minute(), second()));
+
+      Serial.print("New time received ");
+      setTime(dcfTime);
+      writeTimetoSerial(hour(), minute(), second());
+
+      // Force an update
+      displayStateData.lastRTCPoll = 0;
+      displayStateData.lastSerialOutput = 0;
+      lastDcfUpdate = millis();
+    }
+  }
+
 }
