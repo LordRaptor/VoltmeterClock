@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include <voltmeter/VoltmeterManager.h>
-#include <led/LedManager.h>
+#include <led/SmoothLedManager.h>
 #include <RTClib.h>
 #include <avdweb_Switch.h>
 #include <Encoder.h>
@@ -80,7 +80,7 @@ struct DisplayTimeStateData
 };
 DisplayTimeStateData displayStateData = {};
 
-LedManager ledManager(LED_PIN);
+SmoothLedManager ledManager(LED_PIN);
 
 VoltmeterManager voltmeterManager(
     VoltmeterConfig{
@@ -210,6 +210,15 @@ void startupRoutine()
 
 void displayTimeLoop()
 {
+
+  if (hourEncoderData.encoderUp || hourEncoderData.encoderDown) {
+    if (ledManager.changeLedBrightness(hourEncoderData.encoderUp ? 5 : -5))
+    {
+      ledManager.saveLedBrightness();
+    }
+    
+  }
+
   unsigned long localNow = millis();
   if (displayStateData.rtcUpdateInterval <= (localNow - displayStateData.lastRTCPoll))
   {
@@ -269,13 +278,13 @@ void settingStateLoop()
   }
   else if (hourEncoderData.encoderUp || hourEncoderData.encoderDown)
   {
-    rtcTimeHolder.hours = (rtcTimeHolder.hours + (hourEncoderData.encoderUp ? 1 : -1)) % 24;
+    rtcTimeHolder.hours = constrain(rtcTimeHolder.hours + (hourEncoderData.encoderUp ? 1 : -1), 0, 24);
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
     voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, 0);
   }
   else if (minutesEncoderData.encoderUp || minutesEncoderData.encoderDown)
   {
-    rtcTimeHolder.minutes = (rtcTimeHolder.minutes + (minutesEncoderData.encoderUp ? 1 : -1)) % 60;
+    rtcTimeHolder.minutes =  constrain(rtcTimeHolder.minutes + (minutesEncoderData.encoderUp ? 1 : -1), 0, 60);
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
     voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, 0);
   }
@@ -375,13 +384,7 @@ void buttonSingleClickedCallback(void *ref)
   Serial.print(F("Button clicked: "));
   Serial.println(b);
 
-  if (b == HOUR_SWITCH_ID && state == displayTime)
-  {
-    // Change LED brightness
-    ledManager.changeLedBrightness();
-    ledManager.saveLedBrightness();
-  }
-  else if (b == MINUTES_SWITCH_ID && state == displayTime)
+  if (b == MINUTES_SWITCH_ID && state == displayTime)
   {
     // Change voltmeter display mode
     voltmeterManager.changeDisplayMode();
