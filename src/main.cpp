@@ -3,23 +3,32 @@
 #include <led/LedManager.h>
 #include <RTClib.h>
 #include <avdweb_Switch.h>
+#include <Encoder.h>
 
 // Voltmeters
 // Do not use Pins 5 and 6 for Voltmeters
-#define HOURS_VOLTMETER_PIN 11
-#define MINUTES_VOLTMETER_PIN 10
-#define SECONDS_VOLTMETER_PIN 9
+#define HOURS_VOLTMETER_PIN 10
+#define MINUTES_VOLTMETER_PIN 9
+#define SECONDS_VOLTMETER_PIN 6
 #define VOLTMETER_STEPS_PER_SECOND 255
 
 // LEDs
-#define HOURS_LED_PIN 6
-#define MINUTES_LED_PIN 5
-#define SECONDS_LED_PIN 3
+#define LED_PIN 5
 
-// Buttons
-#define BUTTON_1_PIN 7
-#define BUTTON_2_PIN 8
-#define BUTTON_3_PIN 12
+// Buzzer
+#define BUZZER_PIN 3
+
+// Rotary Encoders
+#define HOURS_ENCODER_CLK 12
+#define HOURS_ENCODER_DT 13
+#define HOURS_ENCODER_SWITCH 14
+#define MINUTES_ENCODER_CLK 17
+#define MINUTES_ENCODER_DT 16
+#define MINUTES_ENCODER_SWITCH 15
+
+// Front switch
+#define FRONT_SWITCH_UP 7
+#define FRONT_SWITCH_DOWN 8
 
 // put function declarations here:
 void startupRoutine();
@@ -38,9 +47,10 @@ void exitCalibration();
 void buttonSingleClickedCallback(void *ref);
 void buttonLongPressedCallback(void *ref);
 
-const byte BUTTON_1_ID = 1;
-const byte BUTTON_2_ID = 2;
-const byte BUTTON_3_ID = 3;
+void readEncoders();
+
+const byte HOUR_SWITCH_ID = 1;
+const byte MINUTES_SWITCH_ID = 2;
 
 enum ClockState
 {
@@ -70,7 +80,7 @@ struct DisplayTimeStateData
 };
 DisplayTimeStateData displayStateData = {};
 
-LedManager ledManager(HOURS_LED_PIN, MINUTES_LED_PIN, SECONDS_LED_PIN);
+LedManager ledManager(LED_PIN);
 
 VoltmeterManager voltmeterManager(
     VoltmeterConfig{
@@ -79,14 +89,31 @@ VoltmeterManager voltmeterManager(
         SECONDS_VOLTMETER_PIN,
         VOLTMETER_STEPS_PER_SECOND});
 
-Switch button1 = Switch(BUTTON_1_PIN, INPUT_PULLUP, LOW, 50, 1000, 250, 10);
-Switch button2 = Switch(BUTTON_2_PIN, INPUT_PULLUP, LOW, 50, 4000, 250, 10);
-Switch button3 = Switch(BUTTON_3_PIN, INPUT_PULLUP, LOW, 50, 1000, 250, 10);
+Switch hourButton = Switch(HOURS_ENCODER_SWITCH, INPUT_PULLUP, LOW, 50, 2000, 250, 10);
+Switch minutesButton = Switch(MINUTES_ENCODER_SWITCH, INPUT_PULLUP, LOW, 50, 2000, 250, 10);
+
+Encoder hourEncoder = Encoder(HOURS_ENCODER_CLK, HOURS_ENCODER_DT);
+Encoder minutesEncoder = Encoder(MINUTES_ENCODER_CLK, MINUTES_ENCODER_DT);
+
+struct EncoderData
+{
+  long encoderPos = 0;
+  long newEncoderPos = 0;
+  bool encoderUp = false;
+  bool encoderDown = false;
+};
+
+EncoderData hourEncoderData = {};
+EncoderData minutesEncoderData = {};
+
 
 RTC_DS3231 rtc;
 
 void setup()
 {
+  pinMode(BUZZER_PIN, OUTPUT);
+  noTone(BUZZER_PIN);
+
   Serial.begin(115200);
 
   if (!rtc.begin())
@@ -100,18 +127,12 @@ void setup()
   Serial.println(F("Found RTC"));
 
   rtc.disable32K();
-  rtc.disableAlarm(1);
-  rtc.disableAlarm(2);
-  rtc.clearAlarm(1);
-  rtc.clearAlarm(2);
 
-  button1.setSingleClickCallback(&buttonSingleClickedCallback, (void *)&BUTTON_1_ID);
-  button2.setSingleClickCallback(&buttonSingleClickedCallback, (void *)&BUTTON_2_ID);
-  button3.setSingleClickCallback(&buttonSingleClickedCallback, (void *)&BUTTON_3_ID);
+  hourButton.setSingleClickCallback(&buttonSingleClickedCallback, (void *)&HOUR_SWITCH_ID);
+  minutesButton.setSingleClickCallback(&buttonSingleClickedCallback, (void *)&MINUTES_SWITCH_ID);
 
-  button1.setLongPressCallback(&buttonLongPressedCallback, (void *)&BUTTON_1_ID);
-  button2.setLongPressCallback(&buttonLongPressedCallback, (void *)&BUTTON_2_ID);
-  button3.setLongPressCallback(&buttonLongPressedCallback, (void *)&BUTTON_3_ID);
+  hourButton.setLongPressCallback(&buttonLongPressedCallback, (void *)&HOUR_SWITCH_ID);
+  minutesButton.setLongPressCallback(&buttonLongPressedCallback, (void *)&MINUTES_SWITCH_ID);
 
   ledManager.begin();
   ledManager.update();
@@ -123,9 +144,9 @@ void setup()
 
 void loop()
 {
-  button1.poll();
-  button2.poll();
-  button3.poll();
+  readEncoders();
+  hourButton.poll();
+  minutesButton.poll();
 
   switch (state)
   {
@@ -242,19 +263,19 @@ void enterSettings()
 
 void settingStateLoop()
 {
-  if (button3.pushed())
+  if (hourButton.pushed())
   {
     exitSettings();
   }
-  else if (button1.pushed())
+  else if (hourEncoderData.encoderUp || hourEncoderData.encoderDown)
   {
-    rtcTimeHolder.hours = (rtcTimeHolder.hours + 1) % 24;
+    rtcTimeHolder.hours = (rtcTimeHolder.hours + (hourEncoderData.encoderUp ? 1 : -1)) % 24;
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
     voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, 0);
   }
-  else if (button2.pushed())
+  else if (minutesEncoderData.encoderUp || minutesEncoderData.encoderDown)
   {
-    rtcTimeHolder.minutes = (rtcTimeHolder.minutes + 1) % 60;
+    rtcTimeHolder.minutes = (rtcTimeHolder.minutes + (minutesEncoderData.encoderUp ? 1 : -1)) % 60;
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
     voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, 0);
   }
@@ -296,23 +317,17 @@ void enterCalibration()
 void calibrationStateLoop()
 {
   // Used to calibrate the voltmeters
-  if (button1.singleClick())
+  if (hourEncoderData.encoderUp || hourEncoderData.encoderDown)
   {
-    rtcTimeHolder.hours = rtcTimeHolder.hours < 24 ? rtcTimeHolder.hours + 1 : 0;
+    rtcTimeHolder.hours = constrain(rtcTimeHolder.hours + (hourEncoderData.encoderUp ? 1 : -1), 0, 24);
     voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, 0);
     voltmeterManager.printTargets();
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
   }
-  else if (button2.singleClick())
+  else if (minutesEncoderData.encoderUp || minutesEncoderData.encoderDown)
   {
-    rtcTimeHolder.minutes = rtcTimeHolder.minutes < 60 ? rtcTimeHolder.minutes + 5 : 0;
-    voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, 0);
-    voltmeterManager.printTargets();
-    writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
-  }
-  else if (button3.singleClick())
-  {
-    rtcTimeHolder.seconds = rtcTimeHolder.seconds < 60 ? rtcTimeHolder.seconds + 5 : 0;
+    rtcTimeHolder.minutes = constrain(rtcTimeHolder.minutes + (minutesEncoderData.encoderUp ? 5 : -5), 0, 60);
+        rtcTimeHolder.seconds = rtcTimeHolder.minutes;
     voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, 0);
     voltmeterManager.printTargets();
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
@@ -360,13 +375,13 @@ void buttonSingleClickedCallback(void *ref)
   Serial.print(F("Button clicked: "));
   Serial.println(b);
 
-  if (b == BUTTON_1_ID && state == displayTime)
+  if (b == HOUR_SWITCH_ID && state == displayTime)
   {
     // Change LED brightness
     ledManager.changeLedBrightness();
     ledManager.saveLedBrightness();
   }
-  else if (b == BUTTON_2_ID && state == displayTime)
+  else if (b == MINUTES_SWITCH_ID && state == displayTime)
   {
     // Change voltmeter display mode
     voltmeterManager.changeDisplayMode();
@@ -382,11 +397,11 @@ void buttonLongPressedCallback(void *ref)
   Serial.print(F("Button long pressed: "));
   Serial.println(b);
 
-  if (b == BUTTON_3_ID && state == displayTime)
+  if (b == HOUR_SWITCH_ID && state == displayTime)
   {
     enterSettings();
   }
-  else if (b == BUTTON_1_ID)
+  else if (b == MINUTES_SWITCH_ID)
   {
     if (state == displayTime)
     {
@@ -397,4 +412,31 @@ void buttonLongPressedCallback(void *ref)
       exitCalibration();
     }
   }
+}
+
+void readEncoders() {
+  hourEncoderData.newEncoderPos = hourEncoder.read();
+  minutesEncoderData.newEncoderPos = minutesEncoder.read();
+
+  if (hourEncoderData.encoderPos != hourEncoderData.newEncoderPos && hourEncoderData.newEncoderPos % 4 == 0) {
+    hourEncoderData.encoderDown = hourEncoderData.encoderPos < hourEncoderData.newEncoderPos;
+    hourEncoderData.encoderUp = hourEncoderData.encoderPos > hourEncoderData.newEncoderPos;
+  }
+  else
+  {
+      hourEncoderData.encoderDown = false;
+      hourEncoderData.encoderUp = false;
+  }
+  hourEncoderData.encoderPos = hourEncoderData.newEncoderPos;
+
+  if (minutesEncoderData.encoderPos != minutesEncoderData.newEncoderPos && minutesEncoderData.newEncoderPos % 4 == 0) {
+    minutesEncoderData.encoderDown = minutesEncoderData.encoderPos < minutesEncoderData.newEncoderPos;
+    minutesEncoderData.encoderUp = minutesEncoderData.encoderPos > minutesEncoderData.newEncoderPos;
+  }
+  else
+  {
+      minutesEncoderData.encoderDown = false;
+      minutesEncoderData.encoderUp = false;
+  }
+  minutesEncoderData.encoderPos = minutesEncoderData.newEncoderPos;
 }

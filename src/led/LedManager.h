@@ -14,6 +14,7 @@ enum LedMode {
 class LedManager {
     public:
     LedManager(byte pin1, byte pin2, byte pin3);
+    LedManager(byte pin1);
 
     void begin();
 
