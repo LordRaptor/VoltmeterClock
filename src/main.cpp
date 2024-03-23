@@ -173,7 +173,6 @@ void setup()
   pinMode(FRONT_SWITCH_DOWN, INPUT_PULLUP);
 
   ledManager.begin();
-  ledManager.update();
 
   voltmeterManager.begin();
 
