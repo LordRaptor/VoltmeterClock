@@ -294,9 +294,8 @@ void displayTimeLoop()
       Serial.println("Alarm fired");
       rtc.clearAlarm(1);
       toneAlarm.start(ALARM_LOOP_COUNT);
-    } else {
-      toneAlarm.play();
     }
+    toneAlarm.play();
   } else {
     toneAlarm.stop();
   }
