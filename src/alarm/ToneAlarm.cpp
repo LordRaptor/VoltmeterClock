@@ -6,7 +6,7 @@
 // EEPROM circular buffer configuration
 #define BUFFER_START 0x40 // buffer start address
 #define BUFFER_LEN 10     // number of data blocks
-#define MELODY_COUNT 7
+#define MELODY_COUNT 6
 
 byte melodyIndex;
 
@@ -569,26 +569,6 @@ const PROGMEM byte marioDurations[] = {
   8, 8, 2
 };
 
-const PROGMEM int pacmanNotes[] = {
-  NOTE_B4, NOTE_B5, NOTE_FS5, NOTE_DS5,
-  NOTE_B5, NOTE_FS5, NOTE_DS5, NOTE_C5,
-  NOTE_C6, NOTE_G6, NOTE_E6, NOTE_C6, NOTE_G6, NOTE_E6,
-  
-  NOTE_B4, NOTE_B5, NOTE_FS5, NOTE_DS5, NOTE_B5,
-  NOTE_FS5, NOTE_DS5, NOTE_DS5, NOTE_E5, NOTE_F5,
-  NOTE_F5, NOTE_FS5, NOTE_G5, NOTE_G5, NOTE_GS5, NOTE_A5, NOTE_B5
-};
-
-const PROGMEM byte pacmanDurations[] = {
-  16, 16, 16, 16,
-  32, 16, 8, 16,
-  16, 16, 16, 32, 16, 8,
-  
-  16, 16, 16, 16, 32,
-  16, 8, 32, 32, 32,
-  32, 32, 32, 32, 32, 16, 8
-};
-
 ToneAlarm::ToneAlarm(byte buzzerPin)
 {
     this->buzzerPin = buzzerPin;
@@ -684,8 +664,6 @@ int ToneAlarm::getMelodyLenght()
         return sizeof(tetrisDurations) / sizeof(byte);
     case 5:
         return sizeof(marioDurations) / sizeof(byte);
-    case 6:
-        return sizeof(pacmanDurations) / sizeof(byte);
     default:
         return 0;
     }
@@ -708,8 +686,6 @@ uint16_t ToneAlarm::getNote(int index)
         return pgm_read_word_near(tetrisNotes + index);  
     case 5:
         return pgm_read_word_near(marioNotes + index);
-    case 6:
-        return pgm_read_word_near(pacmanNotes + index);
     default:
         return 0;
     }
@@ -731,8 +707,6 @@ byte ToneAlarm::getDuration(int index)
         return pgm_read_byte_near(tetrisDurations + index);
     case 5:
         return pgm_read_byte_near(marioDurations + index);
-    case 6:
-        return pgm_read_byte_near(pacmanDurations + index);
     default:
         return 0;
     }
