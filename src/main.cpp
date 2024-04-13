@@ -336,13 +336,13 @@ void settingStateLoop()
   }
   else if (hourEncoderData.encoderUp || hourEncoderData.encoderDown)
   {
-    rtcTimeHolder.hours = constrain(rtcTimeHolder.hours + (hourEncoderData.encoderUp ? 1 : -1), 0, 24);
+    rtcTimeHolder.hours = constrain(rtcTimeHolder.hours + (hourEncoderData.encoderUp ? 1 : -1), 0, 23);
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
     voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, 0);
   }
   else if (minutesEncoderData.encoderUp || minutesEncoderData.encoderDown)
   {
-    rtcTimeHolder.minutes =  constrain(rtcTimeHolder.minutes + (minutesEncoderData.encoderUp ? 1 : -1), 0, 60);
+    rtcTimeHolder.minutes =  constrain(rtcTimeHolder.minutes + (minutesEncoderData.encoderUp ? 1 : -1), 0, 59);
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
     voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, 0);
   }
@@ -436,13 +436,13 @@ void alarmSetLoop() {
   }
   else if (hourEncoderData.encoderUp || hourEncoderData.encoderDown)
   {
-    rtcTimeHolder.hours = constrain(rtcTimeHolder.hours + (hourEncoderData.encoderUp ? 1 : -1), 0, 24);
+    rtcTimeHolder.hours = constrain(rtcTimeHolder.hours + (hourEncoderData.encoderUp ? 1 : -1), 0, 23);
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
     voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, 0);
   }
   else if (minutesEncoderData.encoderUp || minutesEncoderData.encoderDown)
   {
-    rtcTimeHolder.minutes =  constrain(rtcTimeHolder.minutes + (minutesEncoderData.encoderUp ? 1 : -1), 0, 60);
+    rtcTimeHolder.minutes =  constrain(rtcTimeHolder.minutes + (minutesEncoderData.encoderUp ? 5 : -5), 0, 55);
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
     voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, 0);
   }
