@@ -386,7 +386,7 @@ void calibrationStateLoop()
   // Used to calibrate the voltmeters
   if (hourEncoderData.encoderUp || hourEncoderData.encoderDown)
   {
-    rtcTimeHolder.hours = constrain(rtcTimeHolder.hours + (hourEncoderData.encoderUp ? 1 : -1), 0, 24);
+    rtcTimeHolder.hours = constrain(rtcTimeHolder.hours + (hourEncoderData.encoderUp ? 2 : -2), 0, 24);
     voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, 0);
     voltmeterManager.printTargets();
     writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
