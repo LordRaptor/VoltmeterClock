@@ -360,7 +360,7 @@ void enterCalibration()
   voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, 0);
   voltmeterManager.printTargets();
   writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
-  ledManager.setMode(pulsing);
+  ledManager.setMode(on);
 
   state = calibration;
 }
@@ -410,7 +410,7 @@ void enterAlarmSet() {
 
   voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, 0);
   writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
-  ledManager.setMode(pulsing);
+  ledManager.setMode(on);
 }
 
 void alarmSetLoop() {

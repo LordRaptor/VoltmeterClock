@@ -124,6 +124,10 @@ void SmoothLedManager::setMode(LedMode mode)
         case off:
             controller.setTarget(0);
             break;
+        case on:
+            controller.setTarget(255);
+            controller.jumpToTarget();
+            break;
         default:
             break;
         }

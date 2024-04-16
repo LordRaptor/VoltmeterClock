@@ -8,7 +8,8 @@ enum LedMode {
     saved_level,
     blinking,
     pulsing,
-    off
+    off,
+    on
 };
 
 class SmoothLedManager {
