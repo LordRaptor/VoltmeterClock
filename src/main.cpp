@@ -410,7 +410,7 @@ void enterAlarmSet() {
 
   voltmeterManager.updateTime(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds, 0);
   writeTimetoSerial(rtcTimeHolder.hours, rtcTimeHolder.minutes, rtcTimeHolder.seconds);
-  ledManager.setMode(on);
+  ledManager.setMode(pulsing);
 }
 
 void alarmSetLoop() {
