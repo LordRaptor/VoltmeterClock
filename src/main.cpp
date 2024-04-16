@@ -35,7 +35,7 @@
 #define FRONT_SWITCH_DOWN 8
 
 // Alarm
-#define ALARM_LOOP_COUNT 10
+#define ALARM_LOOP_COUNT 3
 
 // put function declarations here:
 void startupRoutine();
