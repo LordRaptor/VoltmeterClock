@@ -1,15 +1,13 @@
-# Voltmeter Clock
+# Voltmeter Clock v2.0
 
-## Buttons
+## Controls
 
-![Buttons](/images/Buttons.jpg)
-
-Buttons are counted left to right, with the leftmost button being Button 1
+![Controls](/images/controls.jpg)
 
 
-* Button 1: Change backlight brightness
-* Button 2: Change time display mode
-* Button 3: Press for 1-2s to enter time setting mode
+* Knob 1: Rotate to change backlight brightness. Press and hold for 1-2s to enter time setting mode
+* Knob 2: Click to change time display mode
+* Switch 3: Controls alarm
 
 ## Startup
 When the clock is connected to power, a startup routine will run, slowly pulsing the backlights and moving all indicators to their maximum position and back, before continuing to normal operation. If the timekeeping was lost, the clock will instead switch to time setting mode.
@@ -17,24 +15,48 @@ When the clock is connected to power, a startup routine will run, slowly pulsing
 Use this to confirm that all indicators move freely.
 
 ## Backlight
-There is a yellow LED backlight installed in each display. Use __Button 1__ to toggle brightness between 0% (Off), 25%, 50%, 75% and 100%. This setting persists, even if power is lost
+There is a yellow LED backlight installed in each display. Use __Knob 1__ to increase or decrease brightness.  Rotate clockwise to increase and counter-clockwise to decrease backlight brightness. This setting persists, even if power is lost
 
 ## Time display mode
 
-The clock supports two modes to display time, _digital_ and _analog_. Use __Button 2__ to switch between these. This setting persists, even if power is lost.
+The clock supports two modes to display time, _digital_ and _analog_. Press __Knob 2__ to switch between these. This setting persists, even if power is lost.
 
 * _Digital display mode_: Indicators will point to the current hour, minute and second and move in discrete steps as time moves on. So the seconds indicator will move once per seconds, the minute indicator once per minute and the hours indicator once per hour.
 * _Analog display mode_: Indicators will move smoothly as time progresses.
 
 ## Time setting mode
-Press __Button 3__ until the backlight LEDs start blinking (1-2 seconds). The clock will always switch to _digital display mode_ to make setting the time easier. __Button 1__ will increment the hour, __Button 2__ will increment the minute. Press __Button 3__ again (a short click will be enough) to exit time setting mode. Seconds will always be reset to 0 and start counting again when the new time is confirmed.
+Press and hold __Knob 1__ until the backlight LEDs start blinking (1-2 seconds). The clock will always switch to _digital display mode_ to make setting the time easier. Rotate __Knob 1__ to set the hour, and __Knob 2__ to set the minute. Press __Knob 1__ again (a short click will be enough) to exit time setting mode. Seconds will always be reset to 0 and start counting again when the new time is confirmed.
+
+## Alarm
+
+__Switch 3__ has three positions:
+
+* __Up:__ Set alarm time
+* __Middle:__ Alarm disabled
+* __Down:__ Alarm armed
+
+To set the alarm, move the __Switch 3__ to the __up__ position. Use __Knob 1__ and __Knob 2__ to set the hour and minute of the alarm time. Note that the minutes can only be set in 5 min intervals.
+
+While setting the alarm time, press __Knob 2__ to change the alarm melody. 6 different melodies are available
+
+1. Star Wars
+1. Game of Thrones
+1. Harry Potter
+1. Pirates of the Caribbean
+1. Tetris
+1. Mario
+
+To save the alarm time, move __Switch 3__ to the __middle__ or __down__ position.
+
+Alarm time and selected melody is persisted, even if power is lost.
 
 ## Calibration Mode
 Not used in normal operation.
 
-Pressing __Button 1__ for 1-2 seconds will enter calibration mode, backlight LEDs  will start pulsing slowly. This mode is used to calibrate the displays,
-adjusting the display potentiometers on the circuit board until the indicators points to the end of the dial scale. Buttons will increment the dials above them.
-Long pressing __Button 1__ again for 1-2 seconds will exit this mode and normal operation will resume.
+Pressing __Knob 2__ for 1-2 seconds will enter calibration mode, backlight LEDs  will start pulsing slowly. This mode is used to calibrate the displays,
+adjusting the display potentiometers on the circuit board until the indicators points to the end of the dial scale. __Knob 1__ will move the hour dial, __Knob 2__ will move the minutes and seconds dials.
+
+Long pressing __Knob 1__ again for 1-2 seconds will exit this mode and normal operation will resume.
 
 ## Backup power
 ![Coin cell battery location](/images/BackupBattery.jpg)

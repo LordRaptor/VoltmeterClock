@@ -20,6 +20,12 @@ LedManager::LedManager(byte pin1, byte pin2, byte pin3)
 
 }
 
+LedManager::LedManager(byte pin1)
+{
+    this->controller.addPin(pin1);
+
+}
+
 void LedManager::begin()
 {
     storedState.begin();
