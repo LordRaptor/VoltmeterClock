@@ -20,11 +20,11 @@
 #define LED_PIN 5
 
 // Buzzer
-#define BUZZER_PIN 3
+#define BUZZER_PIN 11
 
 // Rotary Encoders
-#define HOURS_ENCODER_CLK 12
-#define HOURS_ENCODER_DT 13
+#define HOURS_ENCODER_CLK 2
+#define HOURS_ENCODER_DT 3
 #define HOURS_ENCODER_SWITCH 14
 #define MINUTES_ENCODER_CLK 17
 #define MINUTES_ENCODER_DT 16
@@ -536,25 +536,27 @@ void readEncoders() {
   hourEncoderData.newEncoderPos = hourEncoder.read();
   minutesEncoderData.newEncoderPos = minutesEncoder.read();
 
-  if (hourEncoderData.encoderPos != hourEncoderData.newEncoderPos && hourEncoderData.newEncoderPos % 4 == 0) {
+  if (abs(hourEncoderData.encoderPos - hourEncoderData.newEncoderPos) >= 4) {
     hourEncoderData.encoderDown = hourEncoderData.encoderPos < hourEncoderData.newEncoderPos;
     hourEncoderData.encoderUp = hourEncoderData.encoderPos > hourEncoderData.newEncoderPos;
+    hourEncoderData.encoderPos = hourEncoderData.newEncoderPos;
   }
   else
   {
       hourEncoderData.encoderDown = false;
       hourEncoderData.encoderUp = false;
   }
-  hourEncoderData.encoderPos = hourEncoderData.newEncoderPos;
+  
 
-  if (minutesEncoderData.encoderPos != minutesEncoderData.newEncoderPos && minutesEncoderData.newEncoderPos % 4 == 0) {
+  if (abs(minutesEncoderData.encoderPos - minutesEncoderData.newEncoderPos) >= 4) {
     minutesEncoderData.encoderDown = minutesEncoderData.encoderPos < minutesEncoderData.newEncoderPos;
     minutesEncoderData.encoderUp = minutesEncoderData.encoderPos > minutesEncoderData.newEncoderPos;
+    minutesEncoderData.encoderPos = minutesEncoderData.newEncoderPos;
   }
   else
   {
       minutesEncoderData.encoderDown = false;
       minutesEncoderData.encoderUp = false;
   }
-  minutesEncoderData.encoderPos = minutesEncoderData.newEncoderPos;
+  
 }
