@@ -490,6 +490,8 @@ void buttonSingleClickedCallback(void *ref)
 
   if (b == MINUTES_SWITCH_ID)
   {
+    Serial.print(F("Clock state: "));
+    Serial.println(state);
     if (state == displayTime)
     {
       // Change voltmeter display mode
