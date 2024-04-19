@@ -282,6 +282,11 @@ void displayTimeLoop()
     toneAlarm.play();
   } else {
     toneAlarm.stop();
+
+    // Clear the alarm flag if it fired
+    if (rtc.alarmFired(1)) {
+      rtc.clearAlarm(1);
+    }
   }
 }
 
